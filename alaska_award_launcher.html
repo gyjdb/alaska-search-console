@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alaska Award Search Launcher</title>
+  <title>Atmos Rewards Award Launcher · US ↔ China / Europe</title>
   <style>
     * { box-sizing: border-box; }
 
@@ -15,6 +15,7 @@
       --text-secondary: #5f5e5a;
       --text-tertiary: #888780;
       --text-success: #0f6e56;
+      --text-warn: #9a5b1e;
       --text-link: #185fa5;
       --text-accent: #185fa5;
       --border: rgba(0, 0, 0, 0.12);
@@ -32,6 +33,7 @@
         --text-secondary: #b4b2a9;
         --text-tertiary: #888780;
         --text-success: #5dcaa5;
+        --text-warn: #d79b5e;
         --text-link: #85b7eb;
         --text-accent: #85b7eb;
         --border: rgba(255, 255, 255, 0.12);
@@ -147,6 +149,16 @@
     .tab-arrow { display: inline-block; margin: 0 4px; color: var(--text-tertiary); }
     .tab.active .tab-arrow { color: var(--text-accent); }
 
+    .section-heading {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0.5rem 0 0.25rem 0;
+      letter-spacing: 0.2px;
+    }
+    .section-heading:first-child { margin-top: 0; }
+    .section-note { font-size: 12px; color: var(--text-tertiary); margin: 0 0 0.75rem 0; }
+
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -177,10 +189,28 @@
     .group-title { font-size: 15px; font-weight: 500; margin: 0; }
 
     .group-subtitle {
+      display: block;
       font-size: 11px;
       color: var(--text-tertiary);
       font-weight: 400;
-      margin-left: 6px;
+      margin-top: 3px;
+    }
+    .group-subtitle.warn { color: var(--text-warn); }
+
+    .partner-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 1px 8px;
+      border-radius: 999px;
+      margin-left: 8px;
+      background: rgba(24, 95, 165, 0.12);
+      color: var(--text-accent);
+      vertical-align: middle;
+    }
+    .partner-badge.via {
+      background: rgba(15, 110, 86, 0.12);
+      color: var(--text-success);
     }
 
     .region-label {
@@ -196,7 +226,7 @@
 
     .row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
       gap: 6px;
     }
 
@@ -205,7 +235,7 @@
       flex-direction: column;
       align-items: center;
       gap: 2px;
-      padding: 8px 4px;
+      padding: 9px 4px;
       background: var(--bg);
       color: var(--text-primary);
       border: 0.5px solid var(--border-strong);
@@ -218,8 +248,6 @@
     a.route-link:active { transform: scale(0.98); }
 
     a.route-link .code { font-size: 13px; font-weight: 500; }
-    a.route-link .tag { font-size: 10px; color: var(--text-tertiary); }
-    a.route-link .tag.direct { color: var(--text-success); }
 
     .group-actions a {
       font-size: 12px;
@@ -271,232 +299,260 @@
 </head>
 <body>
   <div class="container">
-    <h1>Alaska award search launcher</h1>
-    <p class="subtitle">Partner award · transpacific · pick a direction, month, fare type, click</p>
+    <h1>Atmos Rewards award launcher</h1>
+    <p class="subtitle">Alaska / Hawaiian (Atmos Rewards) partner awards · US ↔ China &amp; Europe · pick direction, month, cabin &amp; passengers, then click</p>
 
     <div class="controls">
       <div class="controls-row">
         <div class="control-group">
           <label for="dateInput">Search month</label>
-          <input type="date" id="dateInput" value="2026-07-01" />
+          <input type="date" id="dateInput" value="2026-09-01" />
         </div>
         <div class="control-group">
-          <label for="fareInput">Fare type</label>
+          <label for="fareInput">Cabin</label>
           <select id="fareInput">
             <option value="">Lowest price available</option>
             <option value="Main">Main (Economy)</option>
             <option value="Partner+Premium">Partner Premium</option>
-            <option value="Partner+Business" selected>Partner Business</option>
+            <option value="Partner+Business">Partner Business</option>
             <option value="First+Class">First Class</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="paxInput">Passengers</label>
+          <select id="paxInput">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
           </select>
         </div>
       </div>
       <div class="presets" id="presets">
         <span class="presets-label">Quick months:</span>
       </div>
-      <div class="hint">Calendar view shows the whole month, so month-end and month-start dates are both covered by one search. "Lowest price available" surfaces saver-fare days.</div>
+      <div class="hint">Calendar view shows the whole month at once. "home" = go back to China (winter / summer break), "back" = return to the US (winter quarter / fall term).</div>
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-direction="outbound">
-        <span class="tab-arrow">→</span> To US
+      <button class="tab active" data-direction="us2asia">
+        <span class="tab-arrow">→</span> Leaving US
       </button>
-      <button class="tab" data-direction="return">
-        <span class="tab-arrow">←</span> To Asia
+      <button class="tab" data-direction="asia2us">
+        <span class="tab-arrow">←</span> Back to US
       </button>
     </div>
 
     <div class="help">
-      <strong>How to open:</strong> click a button to jump there. To open in a new tab, hold <kbd>⌘</kbd> (Mac) or <kbd>Ctrl</kbd> (Windows) while clicking, or use middle-click. To open all routes from one origin, click "Copy all" and paste anywhere.
+      <strong>How to open:</strong> click a code to jump there. To open in a new tab, hold <kbd>⌘</kbd> (Mac) or <kbd>Ctrl</kbd> (Windows) while clicking, or middle-click. To grab every route for one destination at once, click "Copy all" and paste anywhere.
     </div>
 
-    <div class="grid" id="grid"></div>
+    <div id="sections"></div>
 
     <div class="tip">
-      <span class="tip-label">TYO:</span>
-      searches both Tokyo airports (HND + NRT) at once. The separate HND / NRT cards are there if you want to isolate one. If a search engine ever rejects the city code, fall back to the individual airport cards.
-    </div>
-
-    <div class="tip">
-      <span class="tip-label">"Connection" tag:</span>
-      just a rough hint that there's no single nonstop on that pair — calendar view may show blank. The full search or a phone agent can usually piece together a connecting routing. Actual operating carriers and stopovers vary, so treat the tag as a starting point, not the full picture.
+      <span class="tip-label">Tags = the Atmos partner flying that route.</span>
+      Asia: HKG → Cathay · Tokyo → JAL · TPE → Starlux · ICN → Korean Air. Europe: MAD → Iberia · HEL → Finnair · DUB → Aer Lingus · CDG → American · LHR/FRA → American (or BA / Condor). Whether a date is nonstop or connecting — and the mileage price — is exactly what the calendar shows.
     </div>
 
     <div class="tip">
-      <span class="tip-label">Round-trips:</span>
-      Alaska prices each one-way partner award independently — no round-trip discount. Search and ticket each direction on its own, so flexibility on either end helps.
+      <span class="tip-label">Free stopover trick (one per one-way award):</span>
+      US → HKG (stop over) → PVG, or US → gateway (stop over) → onward Europe city, can be a <em>single</em> award instead of two. For Shenzhen, fly Cathay to HKG, then short hop / ferry / ground transfer across the border.
+    </div>
+
+    <div class="tip">
+      <span class="tip-label">Europe = great value, but dodge fuel surcharges:</span>
+      Iberia (MAD), Finnair (HEL) and Aer Lingus (DUB) run around 45k business one-way from the East Coast with ~$25 in fees — booking via Atmos avoids the surcharges Avios programs add. West Coast lands in a higher band. American metal (CDG / LHR / FRA) has no surcharges either. <strong>Avoid British Airways metal</strong> — surcharges can top $500 each way.
+    </div>
+
+    <div class="tip">
+      <span class="tip-label">One partner per award, no round-trip discount:</span>
+      Most awards use a single partner (Atmos only lets you mix among American, British Airways &amp; Finnair so far). Each direction is priced and ticketed on its own — so it is fine to use different partners on the two one-ways, and flexibility on either end helps.
+    </div>
+
+    <div class="tip">
+      <span class="tip-label">Asia reality + gotchas:</span>
+      Saver premium space on Cathay is brutal (rarely any); JAL business (~60k one-way) is the realistic premium sweet spot, economy is far easier. No fuel surcharges on Cathay / JAL / Starlux / Korean, but Hainan, BA &amp; Icelandair add them. Atmos blocks many partner awards within ~72h of departure, charges a small per-award partner booking fee, and shows "phantom" space that errors at booking — so try alternate dates if one fails.
     </div>
 
     <div class="footer">
-      Bookmark this file (<kbd>⌘D</kbd> / <kbd>Ctrl+D</kbd>) for quick access
+      Bookmark this page (<kbd>⌘D</kbd> / <kbd>Ctrl+D</kbd>) for quick access · your last direction / month / cabin / passengers are remembered on this device
     </div>
   </div>
 
   <script>
-    // direct = single nonstop exists that Alaska can ticket; "connection" = no nonstop, may need a connecting routing.
-    // Same direct/connection status is assumed in both directions.
-    const origins = [
+    // Tag = operating Atmos partner. No per-route nonstop/connection flag is hardcoded —
+    // the calendar search is the source of truth for routing and price.
+    const SECTIONS = [
       {
-        code: 'HKG',
-        name: 'Hong Kong',
-        subtitle: '',
-        regions: [
-          { label: 'West Coast', cities: [
-            { city: 'SEA', direct: true },
-            { city: 'SFO', direct: true },
-            { city: 'LAX', direct: true },
-            { city: 'SAN', direct: false },
-            { city: 'PDX', direct: false }
-          ]},
-          { label: 'East Coast', cities: [
-            { city: 'JFK', direct: true },
-            { city: 'BOS', direct: true },
-            { city: 'ORD', direct: true }
-          ]}
+        heading: 'Trans-Pacific gateways — hunt award space on the long-haul leg',
+        note: 'The scarce, expensive part. Search the US to gateway leg here; add the short hop into the mainland (often a free stopover) once the long-haul is locked.',
+        destinations: [
+          {
+            code: 'HKG', name: 'Hong Kong', partner: 'Cathay Pacific', subtitle: 'gateway for Shenzhen / Guangzhou',
+            regions: [
+              { label: 'West Coast', cities: ['SFO', 'LAX', 'SEA', 'SAN', 'PDX'] },
+              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD'] }
+            ]
+          },
+          {
+            code: 'TYO', name: 'Tokyo', partner: 'Japan Airlines', subtitle: 'covers HND + NRT',
+            regions: [
+              { label: 'West Coast', cities: ['SEA', 'SFO', 'LAX', 'SAN', 'PDX'] },
+              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD', 'DFW'] }
+            ]
+          },
+          {
+            code: 'HND', name: 'Tokyo Haneda', partner: 'Japan Airlines', subtitle: '',
+            regions: [
+              { label: 'West Coast', cities: ['SEA', 'SFO', 'LAX', 'SAN'] },
+              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD'] }
+            ]
+          },
+          {
+            code: 'NRT', name: 'Tokyo Narita', partner: 'Japan Airlines', subtitle: '',
+            regions: [
+              { label: 'West Coast', cities: ['SFO', 'LAX', 'SEA', 'SAN'] },
+              { label: 'East / Central', cities: ['JFK', 'ORD'] }
+            ]
+          },
+          {
+            code: 'TPE', name: 'Taipei', partner: 'Starlux', subtitle: 'West Coast nonstops',
+            regions: [
+              { label: 'West Coast', cities: ['SFO', 'LAX', 'SEA', 'ONT'] }
+            ]
+          },
+          {
+            code: 'ICN', name: 'Seoul Incheon', partner: 'Korean Air', subtitle: 'many China connections',
+            regions: [
+              { label: 'West Coast', cities: ['SEA', 'SFO', 'LAX'] },
+              { label: 'East / Central', cities: ['JFK', 'ORD', 'ATL', 'IAD', 'DFW'] }
+            ]
+          }
         ]
       },
       {
-        code: 'TYO',
-        name: 'Tokyo',
-        subtitle: 'covers HND + NRT',
-        regions: [
-          { label: 'West Coast', cities: [
-            { city: 'SEA', direct: true },
-            { city: 'SFO', direct: true },
-            { city: 'LAX', direct: true },
-            { city: 'SAN', direct: false },
-            { city: 'PDX', direct: false }
-          ]},
-          { label: 'East Coast', cities: [
-            { city: 'JFK', direct: true },
-            { city: 'BOS', direct: true },
-            { city: 'ORD', direct: true }
-          ]}
+        heading: 'Mainland China — full search, let Alaska build the routing',
+        note: 'Searches the whole US to Shanghai itinerary; Alaska auto-routes through a partner hub (shown) and may also surface a nonstop. Premium space is rare; economy is more findable.',
+        destinations: [
+          {
+            code: 'PVG', name: 'Shanghai', via: 'via TYO / HKG / ICN',
+            regions: [ { label: 'From US', cities: ['SFO', 'LAX', 'SEA', 'SAN', 'JFK', 'ORD'] } ]
+          }
         ]
       },
       {
-        code: 'HND',
-        name: 'Tokyo Haneda',
-        subtitle: '',
-        regions: [
-          { label: 'West Coast', cities: [
-            { city: 'SEA', direct: true },
-            { city: 'SFO', direct: true },
-            { city: 'LAX', direct: true },
-            { city: 'SAN', direct: false },
-            { city: 'PDX', direct: false }
-          ]},
-          { label: 'East Coast', cities: [
-            { city: 'JFK', direct: true },
-            { city: 'BOS', direct: true },
-            { city: 'ORD', direct: true }
-          ]}
-        ]
-      },
-      {
-        code: 'NRT',
-        name: 'Tokyo Narita',
-        subtitle: '',
-        regions: [
-          { label: 'West Coast', cities: [
-            { city: 'SEA', direct: false },
-            { city: 'SFO', direct: true },
-            { city: 'LAX', direct: true },
-            { city: 'SAN', direct: false },
-            { city: 'PDX', direct: false }
-          ]},
-          { label: 'East Coast', cities: [
-            { city: 'JFK', direct: true },
-            { city: 'BOS', direct: false },
-            { city: 'ORD', direct: true }
-          ]}
-        ]
-      },
-      {
-        code: 'TPE',
-        name: 'Taipei',
-        subtitle: '',
-        regions: [
-          { label: 'West Coast', cities: [
-            { city: 'SEA', direct: false },
-            { city: 'SFO', direct: false },
-            { city: 'LAX', direct: false },
-            { city: 'SAN', direct: false },
-            { city: 'PDX', direct: false }
-          ]},
-          { label: 'East Coast', cities: [
-            { city: 'JFK', direct: false },
-            { city: 'BOS', direct: false },
-            { city: 'ORD', direct: false }
-          ]}
-        ]
-      },
-      {
-        code: 'PVG',
-        name: 'Shanghai',
-        subtitle: '',
-        regions: [
-          { label: 'Central', cities: [
-            { city: 'DFW', direct: true }
-          ]}
+        heading: 'US ↔ Europe gateways — miles to Europe are strong value',
+        note: 'Distance-priced with a free stopover. East-Coast departures hit the cheapest bands; West-Coast costs a band more. Iberia / Finnair / Aer Lingus are the low-fee sweet spots; American metal is also surcharge-free.',
+        destinations: [
+          {
+            code: 'MAD', name: 'Madrid', partner: 'Iberia', subtitle: 'low fees · sweet spot',
+            regions: [
+              { label: 'West Coast', cities: ['LAX', 'SFO'] },
+              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD', 'IAD', 'MIA'] }
+            ]
+          },
+          {
+            code: 'HEL', name: 'Helsinki', partner: 'Finnair', subtitle: 'low fees · gateway into Europe',
+            regions: [
+              { label: 'West Coast', cities: ['LAX', 'SEA'] },
+              { label: 'East / Central', cities: ['JFK', 'ORD', 'DFW'] }
+            ]
+          },
+          {
+            code: 'DUB', name: 'Dublin', partner: 'Aer Lingus', subtitle: '~45k biz from East Coast · US pre-clearance',
+            regions: [
+              { label: 'West Coast', cities: ['SFO', 'LAX', 'SEA'] },
+              { label: 'East / Central', cities: ['BOS', 'JFK', 'ORD', 'IAD', 'DFW'] }
+            ]
+          },
+          {
+            code: 'CDG', name: 'Paris', partner: 'American', subtitle: 'AA metal · no surcharge',
+            regions: [
+              { label: 'West Coast', cities: ['LAX'] },
+              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD', 'PHL', 'MIA', 'DFW'] }
+            ]
+          },
+          {
+            code: 'LHR', name: 'London', partner: 'BA / American', subtitle: 'BA adds big surcharges — prefer AA metal', warn: true,
+            regions: [
+              { label: 'West Coast', cities: ['LAX', 'SFO', 'SEA'] },
+              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD', 'DFW', 'PHL', 'MIA'] }
+            ]
+          },
+          {
+            code: 'FRA', name: 'Frankfurt', partner: 'Condor / American', subtitle: 'Condor or AA metal · no surcharge',
+            regions: [
+              { label: 'West Coast', cities: ['SEA', 'SFO', 'LAX', 'PDX'] },
+              { label: 'East / Central', cities: ['BOS', 'ORD', 'DFW'] }
+            ]
+          }
         ]
       }
     ];
 
+    // Student travel windows. home = back to China (winter / summer break); back = return to US.
     const datePresets = [
-      { label: "Jun '26", value: '2026-06-01' },
-      { label: "Jul '26", value: '2026-07-01' },
-      { label: "Aug '26", value: '2026-08-01' },
-      { label: "Dec '26", value: '2026-12-01' },
-      { label: "Jan '27", value: '2027-01-01' }
+      { label: "Sep '26 · back", value: '2026-09-01' },
+      { label: "Dec '26 · home", value: '2026-12-01' },
+      { label: "Jan '27 · back", value: '2027-01-01' },
+      { label: "Jun '27 · home", value: '2027-06-01' },
+      { label: "Sep '27 · back", value: '2027-09-01' }
     ];
 
-    let currentDirection = 'outbound';
+    const STORE_KEY = 'atmos-launcher-v2';
+    function loadPrefs() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; } }
+    function savePrefs() {
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify({
+          direction: currentDirection,
+          date: getDate(),
+          fare: getFareType(),
+          pax: getPax()
+        }));
+      } catch (e) { /* storage unavailable (e.g. sandbox) — ignore */ }
+    }
 
-    function buildUrl(origin, dest, date, fareType) {
-      let url = `https://www.alaskaair.com/search/calendar?O=${origin}&D=${dest}&OD=${date}&A=1&RT=false&RequestType=Calendar&ShoppingMethod=onlineaward&int=flightresultsmicrosite%3Aviewby-calendar&locale=en-us`;
+    let currentDirection = 'us2asia';
+
+    function buildUrl(origin, dest, date, fareType, pax) {
+      let url = `https://www.alaskaair.com/search/calendar?O=${origin}&D=${dest}&OD=${date}&A=${pax}&RT=false&RequestType=Calendar&ShoppingMethod=onlineaward&int=flightresultsmicrosite%3Aviewby-calendar&locale=en-us`;
       if (fareType) url += `&FareType=${fareType}`;
       return url;
     }
 
-    function getDate() { return document.getElementById('dateInput').value || '2026-07-01'; }
+    function getDate() { return document.getElementById('dateInput').value || '2026-09-01'; }
     function getFareType() { return document.getElementById('fareInput').value; }
+    function getPax() { return document.getElementById('paxInput').value || '1'; }
 
-    // outbound: origin = asia hub, dest = us city. return: origin = us city, dest = asia hub.
-    function resolveLeg(asiaHub, usCity) {
-      if (currentDirection === 'outbound') return { origin: asiaHub, dest: usCity };
-      return { origin: usCity, dest: asiaHub };
+    // us2asia (Leaving US): origin = US city, dest = overseas endpoint. asia2us (Back to US): reversed.
+    function resolveLeg(overseasCode, usCity) {
+      if (currentDirection === 'us2asia') return { origin: usCity, dest: overseasCode };
+      return { origin: overseasCode, dest: usCity };
     }
 
-    function buildRouteLink(asiaHub, route) {
-      const { origin, dest } = resolveLeg(asiaHub, route.city);
+    function buildRouteLink(overseasCode, usCity) {
       const link = document.createElement('a');
       link.className = 'route-link';
-      link.href = buildUrl(origin, dest, getDate(), getFareType());
+      const { origin, dest } = resolveLeg(overseasCode, usCity);
+      link.href = buildUrl(origin, dest, getDate(), getFareType(), getPax());
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      link.dataset.asiaHub = asiaHub;
-      link.dataset.usCity = route.city;
+      link.dataset.overseasCode = overseasCode;
+      link.dataset.usCity = usCity;
 
       const code = document.createElement('span');
       code.className = 'code';
-      code.textContent = route.city;
-
-      const tag = document.createElement('span');
-      tag.className = 'tag' + (route.direct ? ' direct' : '');
-      tag.textContent = route.direct ? 'direct' : 'connection';
-
+      code.textContent = usCity;
       link.appendChild(code);
-      link.appendChild(tag);
       return link;
     }
 
-    function getGroupTitle(originData) {
-      const prefix = currentDirection === 'outbound' ? 'From' : 'To';
-      return `${prefix} ${originData.name} (${originData.code})`;
+    function getDestTitle(d) {
+      const prefix = currentDirection === 'us2asia' ? 'To' : 'From';
+      return `${prefix} ${d.name} (${d.code})`;
     }
 
-    function renderGroup(originData) {
+    function renderDestination(d) {
       const group = document.createElement('div');
       group.className = 'group';
 
@@ -504,14 +560,22 @@
       header.className = 'group-header';
 
       const title = document.createElement('div');
+      const line = document.createElement('div');
       const titleText = document.createElement('span');
       titleText.className = 'group-title';
-      titleText.textContent = getGroupTitle(originData);
-      title.appendChild(titleText);
-      if (originData.subtitle) {
+      titleText.textContent = getDestTitle(d);
+      line.appendChild(titleText);
+
+      const badge = document.createElement('span');
+      if (d.partner) { badge.className = 'partner-badge'; badge.textContent = d.partner; }
+      else { badge.className = 'partner-badge via'; badge.textContent = d.via; }
+      line.appendChild(badge);
+      title.appendChild(line);
+
+      if (d.subtitle) {
         const subtitle = document.createElement('span');
-        subtitle.className = 'group-subtitle';
-        subtitle.textContent = originData.subtitle;
+        subtitle.className = 'group-subtitle' + (d.warn ? ' warn' : '');
+        subtitle.textContent = d.subtitle;
         title.appendChild(subtitle);
       }
 
@@ -520,14 +584,14 @@
       const copyLink = document.createElement('a');
       copyLink.textContent = 'Copy all';
       copyLink.href = '#';
-      copyLink.onclick = (e) => { e.preventDefault(); copyOriginLinks(originData); };
+      copyLink.onclick = (e) => { e.preventDefault(); copyDestLinks(d); };
       actions.appendChild(copyLink);
 
       header.appendChild(title);
       header.appendChild(actions);
       group.appendChild(header);
 
-      originData.regions.forEach(region => {
+      d.regions.forEach(region => {
         const label = document.createElement('div');
         label.className = 'region-label';
         label.textContent = region.label;
@@ -535,43 +599,61 @@
 
         const row = document.createElement('div');
         row.className = 'row';
-        region.cities.forEach(r => row.appendChild(buildRouteLink(originData.code, r)));
+        region.cities.forEach(city => row.appendChild(buildRouteLink(d.code, city)));
         group.appendChild(row);
       });
 
       return group;
     }
 
+    function renderSections() {
+      const root = document.getElementById('sections');
+      root.innerHTML = '';
+      SECTIONS.forEach(sec => {
+        const h = document.createElement('div');
+        h.className = 'section-heading';
+        h.textContent = sec.heading;
+        root.appendChild(h);
+
+        if (sec.note) {
+          const n = document.createElement('div');
+          n.className = 'section-note';
+          n.textContent = sec.note;
+          root.appendChild(n);
+        }
+
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        sec.destinations.forEach(d => grid.appendChild(renderDestination(d)));
+        root.appendChild(grid);
+      });
+    }
+
     function refreshAllLinks() {
       const date = getDate();
       const fareType = getFareType();
+      const pax = getPax();
       document.querySelectorAll('a.route-link').forEach(link => {
-        const { origin, dest } = resolveLeg(link.dataset.asiaHub, link.dataset.usCity);
-        link.href = buildUrl(origin, dest, date, fareType);
+        const { origin, dest } = resolveLeg(link.dataset.overseasCode, link.dataset.usCity);
+        link.href = buildUrl(origin, dest, date, fareType, pax);
       });
     }
 
-    function copyOriginLinks(originData) {
+    function copyDestLinks(d) {
       const date = getDate();
       const fareType = getFareType();
-      const allCities = originData.regions.flatMap(r => r.cities);
-      const lines = allCities.map(r => {
-        const { origin, dest } = resolveLeg(originData.code, r.city);
-        return `${origin} → ${dest}: ${buildUrl(origin, dest, date, fareType)}`;
+      const pax = getPax();
+      const allCities = d.regions.flatMap(r => r.cities);
+      const lines = allCities.map(city => {
+        const { origin, dest } = resolveLeg(d.code, city);
+        return `${origin} → ${dest}: ${buildUrl(origin, dest, date, fareType, pax)}`;
       });
       const text = lines.join('\n');
-      const directionLabel = currentDirection === 'outbound' ? 'to-US' : 'to-Asia';
       navigator.clipboard.writeText(text).then(() => {
-        alert(`Copied ${allCities.length} ${directionLabel} links for ${originData.code} to clipboard.\n\nPaste anywhere and Cmd/Ctrl+click each one.`);
+        alert(`Copied ${allCities.length} links for ${d.code} to clipboard.\n\nPaste anywhere and Cmd/Ctrl+click each one.`);
       }).catch(() => {
         prompt('Copy these links manually:', text);
       });
-    }
-
-    function renderGrid() {
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
-      origins.forEach(o => grid.appendChild(renderGroup(o)));
     }
 
     function syncPresetHighlight() {
@@ -592,6 +674,7 @@
           document.getElementById('dateInput').value = p.value;
           refreshAllLinks();
           syncPresetHighlight();
+          savePrefs();
         };
         container.appendChild(btn);
       });
@@ -602,19 +685,36 @@
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         currentDirection = tab.dataset.direction;
-        renderGrid();
+        renderSections();
+        savePrefs();
       });
     });
 
     document.getElementById('dateInput').addEventListener('change', () => {
       refreshAllLinks();
       syncPresetHighlight();
+      savePrefs();
     });
-    document.getElementById('fareInput').addEventListener('change', refreshAllLinks);
+    document.getElementById('fareInput').addEventListener('change', () => { refreshAllLinks(); savePrefs(); });
+    document.getElementById('paxInput').addEventListener('change', () => { refreshAllLinks(); savePrefs(); });
 
-    renderPresets();
-    renderGrid();
-    syncPresetHighlight();
+    // ---- init: restore saved prefs, then render ----
+    (function init() {
+      const prefs = loadPrefs();
+      if (prefs.direction === 'us2asia' || prefs.direction === 'asia2us') {
+        currentDirection = prefs.direction;
+        document.querySelectorAll('.tab').forEach(t => {
+          t.classList.toggle('active', t.dataset.direction === currentDirection);
+        });
+      }
+      if (prefs.date) document.getElementById('dateInput').value = prefs.date;
+      if (prefs.fare !== undefined) document.getElementById('fareInput').value = prefs.fare;
+      if (prefs.pax) document.getElementById('paxInput').value = prefs.pax;
+
+      renderPresets();
+      renderSections();
+      syncPresetHighlight();
+    })();
   </script>
 </body>
 </html>
