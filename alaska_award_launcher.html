@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alaska Award Search Launcher</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg: #faf9f7;
+      --surface: #ffffff;
+      --surface-soft: #f1efe8;
+      --text-primary: #2c2c2a;
+      --text-secondary: #5f5e5a;
+      --text-tertiary: #888780;
+      --text-success: #0f6e56;
+      --text-link: #185fa5;
+      --text-accent: #185fa5;
+      --border: rgba(0, 0, 0, 0.12);
+      --border-strong: rgba(0, 0, 0, 0.25);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a18;
+        --surface: #242422;
+        --surface-soft: #2c2c2a;
+        --text-primary: #f1efe8;
+        --text-secondary: #b4b2a9;
+        --text-tertiary: #888780;
+        --text-success: #5dcaa5;
+        --text-link: #85b7eb;
+        --text-accent: #85b7eb;
+        --border: rgba(255, 255, 255, 0.12);
+        --border-strong: rgba(255, 255, 255, 0.25);
+      }
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem 1rem;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .container { max-width: 980px; margin: 0 auto; }
+
+    h1 { font-size: 22px; font-weight: 500; margin: 0 0 0.25rem 0; }
+    .subtitle { font-size: 14px; color: var(--text-secondary); margin: 0 0 1.5rem 0; }
+
+    .controls {
+      background: var(--surface-soft);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .control-group { display: flex; align-items: center; gap: 8px; }
+    .controls label { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+
+    input[type="date"], select {
+      font-size: 14px;
+      padding: 6px 10px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text-primary);
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    select { padding-right: 28px; }
+
+    .presets {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .presets-label { font-size: 13px; color: var(--text-secondary); margin-right: 2px; }
+
+    .preset-btn {
+      font-family: inherit;
+      font-size: 13px;
+      padding: 4px 12px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .preset-btn:hover { background: var(--surface-soft); }
+
+    .preset-btn.active {
+      background: var(--text-accent);
+      border-color: var(--text-accent);
+      color: #fff;
+    }
+
+    .hint { font-size: 12px; color: var(--text-tertiary); margin-top: 10px; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 1.25rem;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .tab {
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-secondary);
+      padding: 10px 16px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -0.5px;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .tab:hover { color: var(--text-primary); }
+
+    .tab.active {
+      color: var(--text-accent);
+      border-bottom-color: var(--text-accent);
+      font-weight: 500;
+    }
+
+    .tab-arrow { display: inline-block; margin: 0 4px; color: var(--text-tertiary); }
+    .tab.active .tab-arrow { color: var(--text-accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .group {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+    }
+
+    .group-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .group-title { font-size: 15px; font-weight: 500; margin: 0; }
+
+    .group-subtitle {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-weight: 400;
+      margin-left: 6px;
+    }
+
+    .region-label {
+      font-size: 10px;
+      font-weight: 500;
+      margin: 10px 0 6px 0;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .region-label:first-of-type { margin-top: 0; }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 6px;
+    }
+
+    a.route-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 4px;
+      background: var(--bg);
+      color: var(--text-primary);
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    a.route-link:hover { background: var(--surface-soft); }
+    a.route-link:active { transform: scale(0.98); }
+
+    a.route-link .code { font-size: 13px; font-weight: 500; }
+    a.route-link .tag { font-size: 10px; color: var(--text-tertiary); }
+    a.route-link .tag.direct { color: var(--text-success); }
+
+    .group-actions a {
+      font-size: 12px;
+      color: var(--text-link);
+      text-decoration: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: var(--radius-md);
+    }
+
+    .group-actions a:hover { background: var(--surface-soft); }
+
+    .tip {
+      background: var(--surface-soft);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-top: 1rem;
+    }
+
+    .tip-label { color: var(--text-primary); font-weight: 500; }
+    .tip + .tip { margin-top: 0.5rem; }
+
+    .help {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+
+    kbd {
+      background: var(--surface-soft);
+      border: 0.5px solid var(--border-strong);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: ui-monospace, "SF Mono", monospace;
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .footer { margin-top: 2rem; font-size: 12px; color: var(--text-tertiary); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Alaska award search launcher</h1>
+    <p class="subtitle">Partner award · transpacific · pick a direction, month, fare type, click</p>
+
+    <div class="controls">
+      <div class="controls-row">
+        <div class="control-group">
+          <label for="dateInput">Search month</label>
+          <input type="date" id="dateInput" value="2026-07-01" />
+        </div>
+        <div class="control-group">
+          <label for="fareInput">Fare type</label>
+          <select id="fareInput">
+            <option value="">Lowest price available</option>
+            <option value="Main">Main (Economy)</option>
+            <option value="Partner+Premium">Partner Premium</option>
+            <option value="Partner+Business" selected>Partner Business</option>
+            <option value="First+Class">First Class</option>
+          </select>
+        </div>
+      </div>
+      <div class="presets" id="presets">
+        <span class="presets-label">Quick months:</span>
+      </div>
+      <div class="hint">Calendar view shows the whole month, so month-end and month-start dates are both covered by one search. "Lowest price available" surfaces saver-fare days.</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-direction="outbound">
+        <span class="tab-arrow">→</span> To US
+      </button>
+      <button class="tab" data-direction="return">
+        <span class="tab-arrow">←</span> To Asia
+      </button>
+    </div>
+
+    <div class="help">
+      <strong>How to open:</strong> click a button to jump there. To open in a new tab, hold <kbd>⌘</kbd> (Mac) or <kbd>Ctrl</kbd> (Windows) while clicking, or use middle-click. To open all routes from one origin, click "Copy all" and paste anywhere.
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="tip">
+      <span class="tip-label">TYO:</span>
+      searches both Tokyo airports (HND + NRT) at once. The separate HND / NRT cards are there if you want to isolate one. If a search engine ever rejects the city code, fall back to the individual airport cards.
+    </div>
+
+    <div class="tip">
+      <span class="tip-label">"Connection" tag:</span>
+      just a rough hint that there's no single nonstop on that pair — calendar view may show blank. The full search or a phone agent can usually piece together a connecting routing. Actual operating carriers and stopovers vary, so treat the tag as a starting point, not the full picture.
+    </div>
+
+    <div class="tip">
+      <span class="tip-label">Round-trips:</span>
+      Alaska prices each one-way partner award independently — no round-trip discount. Search and ticket each direction on its own, so flexibility on either end helps.
+    </div>
+
+    <div class="footer">
+      Bookmark this file (<kbd>⌘D</kbd> / <kbd>Ctrl+D</kbd>) for quick access
+    </div>
+  </div>
+
+  <script>
+    // direct = single nonstop exists that Alaska can ticket; "connection" = no nonstop, may need a connecting routing.
+    // Same direct/connection status is assumed in both directions.
+    const origins = [
+      {
+        code: 'HKG',
+        name: 'Hong Kong',
+        subtitle: '',
+        regions: [
+          { label: 'West Coast', cities: [
+            { city: 'SEA', direct: true },
+            { city: 'SFO', direct: true },
+            { city: 'LAX', direct: true },
+            { city: 'SAN', direct: false },
+            { city: 'PDX', direct: false }
+          ]},
+          { label: 'East Coast', cities: [
+            { city: 'JFK', direct: true },
+            { city: 'BOS', direct: true },
+            { city: 'ORD', direct: true }
+          ]}
+        ]
+      },
+      {
+        code: 'TYO',
+        name: 'Tokyo',
+        subtitle: 'covers HND + NRT',
+        regions: [
+          { label: 'West Coast', cities: [
+            { city: 'SEA', direct: true },
+            { city: 'SFO', direct: true },
+            { city: 'LAX', direct: true },
+            { city: 'SAN', direct: false },
+            { city: 'PDX', direct: false }
+          ]},
+          { label: 'East Coast', cities: [
+            { city: 'JFK', direct: true },
+            { city: 'BOS', direct: true },
+            { city: 'ORD', direct: true }
+          ]}
+        ]
+      },
+      {
+        code: 'HND',
+        name: 'Tokyo Haneda',
+        subtitle: '',
+        regions: [
+          { label: 'West Coast', cities: [
+            { city: 'SEA', direct: true },
+            { city: 'SFO', direct: true },
+            { city: 'LAX', direct: true },
+            { city: 'SAN', direct: false },
+            { city: 'PDX', direct: false }
+          ]},
+          { label: 'East Coast', cities: [
+            { city: 'JFK', direct: true },
+            { city: 'BOS', direct: true },
+            { city: 'ORD', direct: true }
+          ]}
+        ]
+      },
+      {
+        code: 'NRT',
+        name: 'Tokyo Narita',
+        subtitle: '',
+        regions: [
+          { label: 'West Coast', cities: [
+            { city: 'SEA', direct: false },
+            { city: 'SFO', direct: true },
+            { city: 'LAX', direct: true },
+            { city: 'SAN', direct: false },
+            { city: 'PDX', direct: false }
+          ]},
+          { label: 'East Coast', cities: [
+            { city: 'JFK', direct: true },
+            { city: 'BOS', direct: false },
+            { city: 'ORD', direct: true }
+          ]}
+        ]
+      },
+      {
+        code: 'TPE',
+        name: 'Taipei',
+        subtitle: '',
+        regions: [
+          { label: 'West Coast', cities: [
+            { city: 'SEA', direct: false },
+            { city: 'SFO', direct: false },
+            { city: 'LAX', direct: false },
+            { city: 'SAN', direct: false },
+            { city: 'PDX', direct: false }
+          ]},
+          { label: 'East Coast', cities: [
+            { city: 'JFK', direct: false },
+            { city: 'BOS', direct: false },
+            { city: 'ORD', direct: false }
+          ]}
+        ]
+      },
+      {
+        code: 'PVG',
+        name: 'Shanghai',
+        subtitle: '',
+        regions: [
+          { label: 'Central', cities: [
+            { city: 'DFW', direct: true }
+          ]}
+        ]
+      }
+    ];
+
+    const datePresets = [
+      { label: "Jun '26", value: '2026-06-01' },
+      { label: "Jul '26", value: '2026-07-01' },
+      { label: "Aug '26", value: '2026-08-01' },
+      { label: "Dec '26", value: '2026-12-01' },
+      { label: "Jan '27", value: '2027-01-01' }
+    ];
+
+    let currentDirection = 'outbound';
+
+    function buildUrl(origin, dest, date, fareType) {
+      let url = `https://www.alaskaair.com/search/calendar?O=${origin}&D=${dest}&OD=${date}&A=1&RT=false&RequestType=Calendar&ShoppingMethod=onlineaward&int=flightresultsmicrosite%3Aviewby-calendar&locale=en-us`;
+      if (fareType) url += `&FareType=${fareType}`;
+      return url;
+    }
+
+    function getDate() { return document.getElementById('dateInput').value || '2026-07-01'; }
+    function getFareType() { return document.getElementById('fareInput').value; }
+
+    // outbound: origin = asia hub, dest = us city. return: origin = us city, dest = asia hub.
+    function resolveLeg(asiaHub, usCity) {
+      if (currentDirection === 'outbound') return { origin: asiaHub, dest: usCity };
+      return { origin: usCity, dest: asiaHub };
+    }
+
+    function buildRouteLink(asiaHub, route) {
+      const { origin, dest } = resolveLeg(asiaHub, route.city);
+      const link = document.createElement('a');
+      link.className = 'route-link';
+      link.href = buildUrl(origin, dest, getDate(), getFareType());
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.dataset.asiaHub = asiaHub;
+      link.dataset.usCity = route.city;
+
+      const code = document.createElement('span');
+      code.className = 'code';
+      code.textContent = route.city;
+
+      const tag = document.createElement('span');
+      tag.className = 'tag' + (route.direct ? ' direct' : '');
+      tag.textContent = route.direct ? 'direct' : 'connection';
+
+      link.appendChild(code);
+      link.appendChild(tag);
+      return link;
+    }
+
+    function getGroupTitle(originData) {
+      const prefix = currentDirection === 'outbound' ? 'From' : 'To';
+      return `${prefix} ${originData.name} (${originData.code})`;
+    }
+
+    function renderGroup(originData) {
+      const group = document.createElement('div');
+      group.className = 'group';
+
+      const header = document.createElement('div');
+      header.className = 'group-header';
+
+      const title = document.createElement('div');
+      const titleText = document.createElement('span');
+      titleText.className = 'group-title';
+      titleText.textContent = getGroupTitle(originData);
+      title.appendChild(titleText);
+      if (originData.subtitle) {
+        const subtitle = document.createElement('span');
+        subtitle.className = 'group-subtitle';
+        subtitle.textContent = originData.subtitle;
+        title.appendChild(subtitle);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'group-actions';
+      const copyLink = document.createElement('a');
+      copyLink.textContent = 'Copy all';
+      copyLink.href = '#';
+      copyLink.onclick = (e) => { e.preventDefault(); copyOriginLinks(originData); };
+      actions.appendChild(copyLink);
+
+      header.appendChild(title);
+      header.appendChild(actions);
+      group.appendChild(header);
+
+      originData.regions.forEach(region => {
+        const label = document.createElement('div');
+        label.className = 'region-label';
+        label.textContent = region.label;
+        group.appendChild(label);
+
+        const row = document.createElement('div');
+        row.className = 'row';
+        region.cities.forEach(r => row.appendChild(buildRouteLink(originData.code, r)));
+        group.appendChild(row);
+      });
+
+      return group;
+    }
+
+    function refreshAllLinks() {
+      const date = getDate();
+      const fareType = getFareType();
+      document.querySelectorAll('a.route-link').forEach(link => {
+        const { origin, dest } = resolveLeg(link.dataset.asiaHub, link.dataset.usCity);
+        link.href = buildUrl(origin, dest, date, fareType);
+      });
+    }
+
+    function copyOriginLinks(originData) {
+      const date = getDate();
+      const fareType = getFareType();
+      const allCities = originData.regions.flatMap(r => r.cities);
+      const lines = allCities.map(r => {
+        const { origin, dest } = resolveLeg(originData.code, r.city);
+        return `${origin} → ${dest}: ${buildUrl(origin, dest, date, fareType)}`;
+      });
+      const text = lines.join('\n');
+      const directionLabel = currentDirection === 'outbound' ? 'to-US' : 'to-Asia';
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`Copied ${allCities.length} ${directionLabel} links for ${originData.code} to clipboard.\n\nPaste anywhere and Cmd/Ctrl+click each one.`);
+      }).catch(() => {
+        prompt('Copy these links manually:', text);
+      });
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      origins.forEach(o => grid.appendChild(renderGroup(o)));
+    }
+
+    function syncPresetHighlight() {
+      const current = getDate();
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === current);
+      });
+    }
+
+    function renderPresets() {
+      const container = document.getElementById('presets');
+      datePresets.forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'preset-btn';
+        btn.textContent = p.label;
+        btn.dataset.value = p.value;
+        btn.onclick = () => {
+          document.getElementById('dateInput').value = p.value;
+          refreshAllLinks();
+          syncPresetHighlight();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentDirection = tab.dataset.direction;
+        renderGrid();
+      });
+    });
+
+    document.getElementById('dateInput').addEventListener('change', () => {
+      refreshAllLinks();
+      syncPresetHighlight();
+    });
+    document.getElementById('fareInput').addEventListener('change', refreshAllLinks);
+
+    renderPresets();
+    renderGrid();
+    syncPresetHighlight();
+  </script>
+</body>
+</html>
