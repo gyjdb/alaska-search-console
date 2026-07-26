@@ -4,7 +4,7 @@ A single-page tool that quickly launches **Alaska / Hawaiian (Atmos Rewards, for
 
 ## Live page
 
-https://gyjdb.github.io/;
+https://gyjdb.github.io/
 alaska-award-search/
 
 Or download `index.html` and open it in any browser — it's fully self-contained (no install, no dependencies, no tracking).
