@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Atmos Rewards Award Launcher · US ↔ China / Europe</title>
+  <title>Atmos 搜索台</title>
   <style>
     * { box-sizing: border-box; }
 
@@ -13,37 +13,63 @@
       --surface-soft: #f1efe8;
       --text-primary: #2c2c2a;
       --text-secondary: #5f5e5a;
-      --text-tertiary: #888780;
+      --text-tertiary: #6b6a64;
       --text-success: #0f6e56;
-      --text-warn: #9a5b1e;
+      --text-warn: #8f5419;
       --text-link: #185fa5;
       --text-accent: #185fa5;
+      --accent-wash: rgba(24, 95, 165, 0.12);
+      --success-wash: rgba(15, 110, 86, 0.12);
+      --on-accent: #ffffff;
       --border: rgba(0, 0, 0, 0.12);
       --border-strong: rgba(0, 0, 0, 0.25);
       --radius-md: 8px;
       --radius-lg: 12px;
     }
 
+    /* Dark tokens are declared twice: once for the un-stamped "system" state,
+       once for an explicit choice from the theme control. Keep the two in sync. */
     @media (prefers-color-scheme: dark) {
-      :root {
+      :root:not([data-theme="light"]) {
         --bg: #1a1a18;
         --surface: #242422;
         --surface-soft: #2c2c2a;
         --text-primary: #f1efe8;
         --text-secondary: #b4b2a9;
-        --text-tertiary: #888780;
+        --text-tertiary: #9b998f;
         --text-success: #5dcaa5;
         --text-warn: #d79b5e;
         --text-link: #85b7eb;
         --text-accent: #85b7eb;
+        --accent-wash: rgba(133, 183, 235, 0.16);
+        --success-wash: rgba(93, 202, 165, 0.16);
+        --on-accent: #1a1a18;
         --border: rgba(255, 255, 255, 0.12);
         --border-strong: rgba(255, 255, 255, 0.25);
       }
     }
 
+    :root[data-theme="dark"] {
+      --bg: #1a1a18;
+      --surface: #242422;
+      --surface-soft: #2c2c2a;
+      --text-primary: #f1efe8;
+      --text-secondary: #b4b2a9;
+      --text-tertiary: #9b998f;
+      --text-success: #5dcaa5;
+      --text-warn: #d79b5e;
+      --text-link: #85b7eb;
+      --text-accent: #85b7eb;
+      --accent-wash: rgba(133, 183, 235, 0.16);
+      --success-wash: rgba(93, 202, 165, 0.16);
+      --on-accent: #1a1a18;
+      --border: rgba(255, 255, 255, 0.12);
+      --border-strong: rgba(255, 255, 255, 0.25);
+    }
+
     body {
       margin: 0;
-      padding: 2rem 1rem;
+      padding: 2rem 1rem 3rem;
       background: var(--bg);
       color: var(--text-primary);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -51,29 +77,61 @@
       line-height: 1.7;
     }
 
-    .container { max-width: 980px; margin: 0 auto; }
+    .container { max-width: 1060px; margin: 0 auto; }
+    p { margin: 0; }
+    button, input, select { font-family: inherit; color: inherit; }
+    :where(a, button, input, select):focus-visible { outline: 2px solid var(--text-accent); outline-offset: 2px; border-radius: 4px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
+    /* ---------- header ---------- */
+
+    .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     h1 { font-size: 22px; font-weight: 500; margin: 0 0 0.25rem 0; }
-    .subtitle { font-size: 14px; color: var(--text-secondary); margin: 0 0 1.5rem 0; }
+    .subtitle { font-size: 14px; color: var(--text-secondary); max-width: 62ch; }
 
-    .controls {
-      background: var(--surface-soft);
-      border-radius: var(--radius-lg);
-      padding: 1rem 1.25rem;
-      margin-bottom: 1rem;
+    .stats { display: flex; flex-wrap: wrap; gap: 6px; margin: 0.85rem 0 0; padding: 0; list-style: none; }
+    .stats[hidden] { display: none; }
+    .stats li { padding: 3px 11px; background: var(--surface-soft); border-radius: 999px; font-size: 12px; color: var(--text-secondary); }
+    .stats b { color: var(--text-primary); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+    /* ---------- pill controls ---------- */
+
+    .pill-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .pill-row[hidden] { display: none; }
+
+    .pill {
+      font-size: 13px;
+      padding: 4px 12px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text-primary);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
     }
+    .pill:hover { background: var(--surface-soft); }
+    .pill[aria-pressed="true"] { background: var(--text-accent); border-color: var(--text-accent); color: var(--on-accent); }
+    .pill[aria-disabled="true"], .pill:disabled { opacity: .45; pointer-events: none; }
 
-    .controls-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
+    .pill.link-ish { border-color: transparent; background: transparent; color: var(--text-link); padding: 4px 8px; }
+    .pill.link-ish:hover { background: var(--surface-soft); }
 
+    .mode-row { margin: 1.25rem 0 1rem; }
+    .mode-pill { font-size: 14px; padding: 6px 18px; }
+    .theme-row { gap: 4px; }
+    .theme-row .pill { font-size: 12px; padding: 3px 10px; }
+    .theme-row .pill[aria-pressed="true"] { background: var(--accent-wash); border-color: var(--text-accent); color: var(--text-accent); }
+
+    /* ---------- controls block ---------- */
+
+    .controls { background: var(--surface-soft); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
+    .controls-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
     .control-group { display: flex; align-items: center; gap: 8px; }
-    .controls label { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+    .control-group[hidden] { display: none; }
+    .controls label, .control-label { font-size: 14px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; }
 
-    input[type="date"], select {
+    input[type="date"], input[type="number"], input[type="text"], select, input.code {
       font-size: 14px;
       padding: 6px 10px;
       border: 0.5px solid var(--border-strong);
@@ -81,639 +139,2059 @@
       background: var(--surface);
       color: var(--text-primary);
       font-family: inherit;
-      cursor: pointer;
     }
-
+    input[type="date"], select { cursor: pointer; }
     select { padding-right: 28px; }
+    input.code { width: 5.6em; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+    input::placeholder { color: var(--text-tertiary); opacity: .72; }
 
-    .presets {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 12px;
+    .controls-sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .controls-sub[hidden] { display: none; }
+    .controls-sub-label { font-size: 13px; color: var(--text-secondary); margin-right: 2px; }
+
+    .controls-foot {
+      display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap;
+      margin-top: 12px; padding-top: 10px;
+      border-top: 0.5px solid var(--border);
+      font-size: 13px; color: var(--text-secondary);
     }
+    .controls-foot .grow { flex: 1 1 240px; }
+    .controls-foot .count { font-variant-numeric: tabular-nums; }
+    .hint { font-size: 12px; color: var(--text-tertiary); margin-top: 10px; min-height: 1.2em; }
+    .hint.warn { color: var(--text-warn); }
 
-    .presets-label { font-size: 13px; color: var(--text-secondary); margin-right: 2px; }
+    /* ---------- tabs ---------- */
 
-    .preset-btn {
-      font-family: inherit;
-      font-size: 13px;
-      padding: 4px 12px;
-      border: 0.5px solid var(--border-strong);
-      border-radius: 999px;
-      background: var(--surface);
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-    }
-
-    .preset-btn:hover { background: var(--surface-soft); }
-
-    .preset-btn.active {
-      background: var(--text-accent);
-      border-color: var(--text-accent);
-      color: #fff;
-    }
-
-    .hint { font-size: 12px; color: var(--text-tertiary); margin-top: 10px; }
-
-    .tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 1.25rem;
-      border-bottom: 0.5px solid var(--border);
-    }
-
+    .tabs { display: flex; gap: 4px; margin: 1.25rem 0; border-bottom: 0.5px solid var(--border); overflow-x: auto; scrollbar-width: thin; }
     .tab {
-      background: none;
-      border: none;
-      font-family: inherit;
-      font-size: 14px;
-      color: var(--text-secondary);
-      padding: 10px 16px;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -0.5px;
-      transition: color 0.15s ease, border-color 0.15s ease;
+      background: none; border: none;
+      font-size: 14px; color: var(--text-secondary);
+      padding: 10px 16px; cursor: pointer; white-space: nowrap;
+      border-bottom: 2px solid transparent; margin-bottom: -0.5px;
+      transition: color .15s ease, border-color .15s ease;
     }
-
     .tab:hover { color: var(--text-primary); }
-
-    .tab.active {
-      color: var(--text-accent);
-      border-bottom-color: var(--text-accent);
-      font-weight: 500;
+    .tab.active { color: var(--text-accent); border-bottom-color: var(--text-accent); font-weight: 500; }
+    .tab-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; margin-left: 4px; padding: 0 5px;
+      border-radius: 999px; background: var(--surface-soft); color: var(--text-secondary);
+      font-size: 10px; font-variant-numeric: tabular-nums; vertical-align: 1px;
     }
+    .tab.active .tab-count { background: var(--accent-wash); color: var(--text-accent); }
+    .tab-count[hidden] { display: none; }
 
-    .tab-arrow { display: inline-block; margin: 0 4px; color: var(--text-tertiary); }
-    .tab.active .tab-arrow { color: var(--text-accent); }
+    .mode-block[hidden], .tab-panel[hidden] { display: none; }
+    .tab-panel > * + * { margin-top: 1.1rem; }
+    .stack > div:has(> .section-heading) + .group { margin-top: 0.5rem; }
+    .stack > * + * { margin-top: 1rem; }
 
-    .section-heading {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0.5rem 0 0.25rem 0;
-      letter-spacing: 0.2px;
-    }
-    .section-heading:first-child { margin-top: 0; }
-    .section-note { font-size: 12px; color: var(--text-tertiary); margin: 0 0 0.75rem 0; }
+    .section-heading { font-size: 13px; font-weight: 600; margin: 0 0 0.1rem; letter-spacing: 0.2px; }
+    .section-note { font-size: 12px; color: var(--text-tertiary); max-width: 80ch; }
+    .section-bar { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
+    /* ---------- group cards ---------- */
 
-    @media (max-width: 720px) {
-      .grid { grid-template-columns: 1fr; }
-    }
-
-    .group {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1rem 1.25rem;
-    }
-
-    .group-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 0.75rem;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
+    .group { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
+    .group-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 0.4rem; }
     .group-title { font-size: 15px; font-weight: 500; margin: 0; }
-
-    .group-subtitle {
-      display: block;
-      font-size: 11px;
-      color: var(--text-tertiary);
-      font-weight: 400;
-      margin-top: 3px;
-    }
+    .group-subtitle { display: block; font-size: 11px; color: var(--text-tertiary); font-weight: 400; margin-top: 3px; }
     .group-subtitle.warn { color: var(--text-warn); }
 
     .partner-badge {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 500;
-      padding: 1px 8px;
-      border-radius: 999px;
-      margin-left: 8px;
-      background: rgba(24, 95, 165, 0.12);
-      color: var(--text-accent);
-      vertical-align: middle;
+      display: inline-block; margin-left: 8px; padding: 1px 8px;
+      border-radius: 999px; background: var(--accent-wash); color: var(--text-accent);
+      font-size: 11px; font-weight: 500; vertical-align: middle;
     }
-    .partner-badge.via {
-      background: rgba(15, 110, 86, 0.12);
-      color: var(--text-success);
-    }
+    .partner-badge.via { background: var(--success-wash); color: var(--text-success); }
 
     .region-label {
-      font-size: 10px;
-      font-weight: 500;
-      margin: 10px 0 6px 0;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 10px; font-weight: 500; margin: 10px 0 6px;
+      color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;
     }
 
-    .region-label:first-of-type { margin-top: 0; }
+    /* ---------- route tiles ---------- */
 
-    .row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
-      gap: 6px;
-    }
-
+    .row { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
     a.route-link {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      padding: 9px 4px;
-      background: var(--bg);
-      color: var(--text-primary);
-      border: 0.5px solid var(--border-strong);
-      border-radius: var(--radius-md);
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      padding: 9px 4px; line-height: 1.35;
+      background: var(--bg); color: var(--text-primary);
+      border: 0.5px solid var(--border-strong); border-radius: var(--radius-md);
       text-decoration: none;
-      transition: background 0.15s ease, transform 0.1s ease;
+      transition: background .15s ease, transform .1s ease;
     }
-
     a.route-link:hover { background: var(--surface-soft); }
     a.route-link:active { transform: scale(0.98); }
-
     a.route-link .code { font-size: 13px; font-weight: 500; }
+    a.route-link .meta { font-size: 11px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
 
-    .group-actions a {
-      font-size: 12px;
-      color: var(--text-link);
-      text-decoration: none;
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: var(--radius-md);
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ---------- two-leg stopover rows ---------- */
+
+    .stop-list { margin: 0.5rem 0 0; padding: 0; list-style: none; }
+    .stop-row {
+      display: grid;
+      grid-template-columns: 46px minmax(80px, 150px) minmax(0, 1fr) minmax(0, 1fr) auto;
+      align-items: center; gap: 10px;
+      padding: 6px 0; border-top: 0.5px solid var(--border);
     }
-
-    .group-actions a:hover { background: var(--surface-soft); }
-
-    .tip {
-      background: var(--surface-soft);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-      margin-top: 1rem;
+    .stop-row:first-child { border-top: 0; }
+    .stop-code { font-size: 14px; font-weight: 500; }
+    .stop-name { font-size: 12px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    a.leg {
+      display: flex; align-items: baseline; justify-content: center; gap: 7px;
+      padding: 7px 10px; line-height: 1.4;
+      background: var(--bg); color: var(--text-primary);
+      border: 0.5px solid var(--border-strong); border-radius: var(--radius-md);
+      text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap;
     }
+    a.leg:hover { background: var(--surface-soft); }
+    a.leg .when { font-size: 11px; font-weight: 400; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
 
-    .tip-label { color: var(--text-primary); font-weight: 500; }
-    .tip + .tip { margin-top: 0.5rem; }
+    /* ---------- price tracker ---------- */
 
-    .help {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-      margin-bottom: 1.5rem;
+    .tracker-summary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+    .tracker-metric {
+      min-width: 0; padding: 12px 14px;
+      background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg);
     }
-
-    kbd {
-      background: var(--surface-soft);
-      border: 0.5px solid var(--border-strong);
-      border-radius: 4px;
-      padding: 1px 6px;
-      font-family: ui-monospace, "SF Mono", monospace;
-      font-size: 12px;
-      color: var(--text-primary);
+    .tracker-metric .value {
+      display: block; color: var(--text-primary); font-size: 20px; line-height: 1.3;
+      font-weight: 500; font-variant-numeric: tabular-nums;
+      overflow: hidden; text-overflow: ellipsis;
     }
+    .tracker-metric .label { display: block; margin-top: 3px; color: var(--text-tertiary); font-size: 11px; white-space: nowrap; }
+    .tracker-progress-card { grid-column: 1 / -1; padding: 12px 14px; }
+    .tracker-progress-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; font-size: 12px; color: var(--text-secondary); }
+    .tracker-progress-head b { color: var(--text-primary); font-weight: 500; font-variant-numeric: tabular-nums; }
+    .tracker-progress {
+      height: 8px; overflow: hidden; border-radius: 999px;
+      background: var(--surface-soft); border: 0.5px solid var(--border);
+    }
+    .tracker-progress > span { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--text-success); transition: width .25s ease; }
+
+    .tracker-form { padding-top: 1.15rem; }
+    .tracker-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 14px; }
+    .form-field { display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; }
+    .form-field label, .form-label { color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+    .form-field input, .form-field select { width: 100%; min-width: 0; }
+    .form-field input.code { width: 100%; }
+    .form-span-2 { grid-column: span 2; }
+    .form-span-4 { grid-column: 1 / -1; }
+    .tracker-second-start { grid-column-start: 1; }
+    .inline-check {
+      display: flex; align-items: flex-start; gap: 8px; min-height: 39px; padding: 8px 10px;
+      border: 0.5px solid var(--border); border-radius: var(--radius-md); background: var(--bg);
+      color: var(--text-secondary); font-size: 12px; line-height: 1.45; cursor: pointer;
+    }
+    .inline-check input { flex: 0 0 auto; width: auto; margin: 2px 0 0; accent-color: var(--text-accent); }
+    .tracker-preview {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap;
+      margin-top: 14px; padding: 10px 12px; border-radius: var(--radius-md);
+      background: var(--surface-soft); color: var(--text-secondary); font-size: 12px;
+    }
+    .tracker-preview strong { color: var(--text-primary); font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .tracker-preview.warn { background: rgba(143, 84, 25, .1); color: var(--text-warn); }
+    .tracker-searches { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tracker-searches .pill { white-space: nowrap; }
+    .tracker-form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+    .tracker-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
+    .tracker-toolbar .filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .tracker-toolbar label { color: var(--text-secondary); font-size: 12px; }
+    .tracker-table-wrap { overflow: auto; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); }
+    .tracker-table { width: 100%; min-width: 860px; border-collapse: collapse; font-size: 12px; line-height: 1.45; }
+    .tracker-table th, .tracker-table td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 0.5px solid var(--border); }
+    .tracker-table th { background: var(--surface-soft); color: var(--text-secondary); font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .tracker-table tbody tr:last-child td { border-bottom: 0; }
+    .tracker-table tbody tr:hover td { background: var(--surface-soft); }
+    .tracker-route { display: block; color: var(--text-primary); font-size: 13px; font-weight: 500; white-space: nowrap; }
+    .tracker-sub { display: block; margin-top: 2px; color: var(--text-tertiary); font-size: 10px; }
+    .tracker-number { white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .tracker-best { color: var(--text-success); font-weight: 500; }
+    .tracker-status { display: inline-block; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+    .tracker-status.candidate { color: var(--text-secondary); background: var(--surface-soft); }
+    .tracker-status.booked { color: var(--text-accent); background: var(--accent-wash); }
+    .tracker-status.flown { color: var(--text-success); background: var(--success-wash); }
+    .tracker-verified { display: block; margin-top: 4px; color: var(--text-success); font-size: 10px; }
+    .tracker-unverified { display: block; margin-top: 4px; color: var(--text-warn); font-size: 10px; }
+    .tracker-actions { display: flex; gap: 4px; flex-wrap: wrap; min-width: 155px; }
+    .tracker-actions .pill { padding: 3px 8px; font-size: 11px; }
+    .tracker-empty { padding: 24px 16px; text-align: center; color: var(--text-tertiary); font-size: 13px; }
+    .tracker-empty[hidden] { display: none; }
+    .tracker-note { max-width: 180px; overflow-wrap: anywhere; }
+
+    /* ---------- date strip ---------- */
+
+    .date-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 6px; margin-top: 0.6rem; }
+    .date-strip.months { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    a.date-link {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+      min-height: 52px; line-height: 1.35;
+      background: var(--bg); color: var(--text-primary);
+      border: 0.5px solid var(--border-strong); border-radius: var(--radius-md);
+      text-decoration: none; font-size: 11px;
+    }
+    a.date-link:hover { background: var(--surface-soft); }
+    a.date-link .d { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+    a.date-link .w { color: var(--text-tertiary); }
+    a.date-link.center { background: var(--accent-wash); border-color: var(--text-accent); }
+
+    /* ---------- comparison matrix ---------- */
+
+    .mx-wrap { overflow: auto; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); }
+    @media (min-width: 761px) { .mx-wrap { max-height: 620px; } }
+    .mx { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; line-height: 1.4; }
+    .mx th, .mx td { padding: 0; text-align: center; }
+    .mx thead th {
+      position: sticky; top: 0; z-index: 3;
+      padding: 9px 4px; background: var(--surface-soft);
+      border-bottom: 0.5px solid var(--border);
+      font-size: 12px; font-weight: 500; color: var(--text-primary);
+    }
+    .mx thead th.corner { z-index: 4; text-align: left; padding-left: 14px; color: var(--text-secondary); font-weight: 400; }
+    .mx thead th.corner, .mx .mx-origin { position: sticky; left: 0; }
+    .mx .region th {
+      position: sticky; left: 0;
+      padding: 5px 14px; background: var(--surface-soft);
+      border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border);
+      text-align: left; font-size: 10px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary);
+    }
+    .mx .mx-origin {
+      z-index: 2; padding: 6px 10px 6px 14px;
+      background: var(--surface); border-bottom: 0.5px solid var(--border);
+      text-align: left; white-space: nowrap; font-weight: 400;
+    }
+    .mx-origin .code { display: block; font-size: 13px; font-weight: 500; }
+    .mx-origin .name { display: block; font-size: 10px; color: var(--text-tertiary); }
+    .mx tbody td { border-bottom: 0.5px solid var(--border); border-left: 0.5px solid var(--border); }
+    .mx tbody tr:hover .mx-origin, .mx tbody tr:hover td { background: var(--surface-soft); }
+    .mx .col-hl { background: var(--surface-soft); }
+    a.mx-cell {
+      display: block; min-width: 42px; padding: 11px 4px;
+      color: var(--text-link); text-decoration: none; font-size: 14px; line-height: 1;
+    }
+    a.mx-cell::before { content: "›"; }
+    a.mx-cell:hover { background: var(--accent-wash); }
+    .mx td.tools { border-left: 0.5px solid var(--border); }
+    .mx .tools .pill { padding: 3px 8px; border-color: transparent; background: transparent; color: var(--text-tertiary); }
+    .mx .tools .pill:hover { color: var(--text-link); background: var(--surface); }
+
+    /* ---------- swept state ---------- */
+
+    .seen-mark { display: none; }
+    a.seen .seen-mark { display: inline; margin-left: 4px; color: var(--text-success); font-weight: 500; }
+    a.route-link.seen, a.leg.seen, a.date-link.seen { color: var(--text-tertiary); background: var(--surface); border-style: dashed; }
+    a.route-link.seen .meta, a.leg.seen .when { color: var(--text-tertiary); }
+    a.mx-cell.seen { color: var(--text-success); background: var(--success-wash); }
+    a.mx-cell.seen::before { content: "✓"; }
+
+    /* ---------- tips / checklist ---------- */
+
+    .tip { background: var(--surface-soft); border-radius: var(--radius-md); padding: 12px 16px; font-size: 13px; color: var(--text-secondary); }
+    .tip-label { display: block; color: var(--text-primary); font-weight: 500; }
+    .tip.warn .tip-label { color: var(--text-warn); }
+    .tip strong { color: var(--text-primary); font-weight: 500; }
+
+    .partner-map { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0 18px; margin-top: 8px; }
+    .partner-map div { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; border-bottom: 0.5px solid var(--border); padding: 2px 0; }
+    .partner-map .pm-code { font-weight: 500; color: var(--text-primary); }
+    .partner-map .pm-name { color: var(--text-tertiary); }
+
+    .check { display: flex; gap: 10px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; font-size: 13px; color: var(--text-secondary); }
+    .check-n { flex: 0 0 auto; color: var(--text-accent); font-weight: 500; font-variant-numeric: tabular-nums; }
+    .check b { display: block; color: var(--text-primary); font-weight: 500; }
 
     .footer { margin-top: 2rem; font-size: 12px; color: var(--text-tertiary); text-align: center; }
+    kbd { background: var(--surface-soft); border: 0.5px solid var(--border-strong); border-radius: 4px; padding: 1px 6px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--text-primary); }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 22px; z-index: 20;
+      transform: translate(-50%, 14px);
+      padding: 8px 16px; border-radius: 999px;
+      background: var(--text-primary); color: var(--bg);
+      font-size: 13px; opacity: 0; pointer-events: none; transition: .18s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 760px) {
+      body { padding: 1.25rem 0.85rem 3rem; }
+      .stop-row { grid-template-columns: 46px minmax(0, 1fr); }
+      .stop-row a.leg { grid-column: span 2; }
+      .stop-row [data-track-stop] { grid-column: span 2; justify-self: stretch; }
+      .tracker-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .tracker-wide-mobile { grid-column: span 2; }
+      .tracker-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .form-span-4 { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 460px) {
+      .tracker-form-grid { grid-template-columns: 1fr; }
+      .form-span-2, .form-span-4 { grid-column: 1; }
+      .tracker-form-actions { justify-content: stretch; }
+      .tracker-form-actions .pill { flex: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Atmos Rewards award launcher</h1>
-    <p class="subtitle">Alaska / Hawaiian (Atmos Rewards) partner awards · US ↔ China &amp; Europe · pick direction, month, cabin &amp; passengers, then click</p>
+    <div class="page-head">
+      <div>
+        <h1>Atmos 搜索台</h1>
+        <p class="subtitle" id="lede"></p>
+      </div>
+      <div class="pill-row theme-row" role="group" aria-label="主题">
+        <button class="pill" data-theme-set="auto" aria-pressed="true" type="button">跟随系统</button>
+        <button class="pill" data-theme-set="light" aria-pressed="false" type="button">浅色</button>
+        <button class="pill" data-theme-set="dark" aria-pressed="false" type="button">深色</button>
+      </div>
+    </div>
 
-    <div class="controls">
-      <div class="controls-row">
-        <div class="control-group">
-          <label for="dateInput">Search month</label>
-          <input type="date" id="dateInput" value="2026-09-01" />
+    <ul class="stats" id="statsCash">
+      <li><b>4</b> 段 Silver</li><li><b>8</b> 段 Gold</li><li><b>20</b> 段 Platinum</li>
+      <li><b>180</b> 天内飞完</li><li>Saver / 里程票不算</li>
+    </ul>
+    <ul class="stats" id="statsAward" hidden>
+      <li><b>45k</b> 欧洲商务 · 东岸</li><li><b>60k</b> JAL 商务</li>
+      <li><b>1</b> 次免费中停</li><li>避开 BA 的飞机</li>
+    </ul>
+
+    <div class="pill-row mode-row" role="group" aria-label="搜索类型">
+      <button class="pill mode-pill" data-mode="cash" aria-pressed="true" type="button">现金刷段</button>
+      <button class="pill mode-pill" data-mode="award" aria-pressed="false" type="button">里程票</button>
+    </div>
+
+    <!-- ════════ 现金刷段 ════════ -->
+    <div class="mode-block" id="mode-cash">
+      <div class="controls">
+        <div class="controls-row">
+          <div class="control-group">
+            <label for="date1">出发日期</label>
+            <input type="date" id="date1">
+          </div>
+          <div class="control-group" id="group-date2" hidden>
+            <label for="date2">第二程日期</label>
+            <input type="date" id="date2">
+          </div>
+          <div class="control-group">
+            <label for="pax">人数</label>
+            <select id="pax"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+          </div>
+          <div class="control-group">
+            <label for="searchMode">日期模式</label>
+            <select id="searchMode">
+              <option value="flexible">Flexible dates（整月日历）</option>
+              <option value="exact">Exact date（指定当天）</option>
+            </select>
+          </div>
         </div>
-        <div class="control-group">
-          <label for="fareInput">Cabin</label>
-          <select id="fareInput">
-            <option value="">Lowest price available</option>
-            <option value="Main">Main (Economy)</option>
-            <option value="Partner+Premium">Partner Premium</option>
-            <option value="Partner+Business">Partner Business</option>
-            <option value="First+Class">First Class</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label for="paxInput">Passengers</label>
-          <select id="paxInput">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-          </select>
+        <div class="hint" id="cashModeNote"></div>
+        <div class="controls-foot">
+          <span class="grow">每个链接都固定现金票、单程、Main Cabin。</span>
+          <span class="count" id="cashSeenCount"></span>
+          <button class="pill" data-open-next type="button">打开下一条未看</button>
+          <button class="pill link-ish" data-clear-seen type="button">清除标记</button>
         </div>
       </div>
-      <div class="presets" id="presets">
-        <span class="presets-label">Quick months:</span>
+
+      <div class="tabs" role="tablist" aria-label="现金刷段搜索方式">
+        <button class="tab active" role="tab" id="tab-custom" aria-controls="panel-custom" aria-selected="true" tabindex="0" data-tab="custom" type="button">自定义搜索</button>
+        <button class="tab" role="tab" id="tab-two" aria-controls="panel-two" aria-selected="false" tabindex="-1" data-tab="two" data-date2="yes" type="button">两程凑 4 段</button>
+        <button class="tab" role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" tabindex="-1" data-tab="tracker" data-date2="yes" type="button">价格记录器<span class="tab-count" id="trackerTabCount" hidden></span></button>
+        <button class="tab" role="tab" id="tab-matrix" aria-controls="panel-matrix" aria-selected="false" tabindex="-1" data-tab="matrix" type="button">东西比价矩阵</button>
+        <button class="tab" role="tab" id="tab-west" aria-controls="panel-west" aria-selected="false" tabindex="-1" data-tab="west" type="button">西部短途刷段</button>
+        <button class="tab" role="tab" id="tab-hawaii" aria-controls="panel-hawaii" aria-selected="false" tabindex="-1" data-tab="hawaii" type="button">夏威夷岛内</button>
+        <button class="tab" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules" type="button">购票检查</button>
       </div>
-      <div class="hint">Calendar view shows the whole month at once. "home" = go back to China (winter / summer break), "back" = return to the US (winter quarter / fall term).</div>
+
+      <section class="tab-panel" id="panel-custom" role="tabpanel" aria-labelledby="tab-custom" tabindex="0">
+        <div class="group">
+          <div class="controls-row">
+            <div class="control-group">
+              <label for="origin">出发</label>
+              <input class="code" id="origin" list="airportList" maxlength="3" placeholder="SAN" autocomplete="off" spellcheck="false">
+            </div>
+            <button class="pill" data-swap="origin,destination" type="button">⇄ 交换</button>
+            <div class="control-group">
+              <label for="destination">到达</label>
+              <input class="code" id="destination" list="airportList" maxlength="3" placeholder="SEA" autocomplete="off" spellcheck="false">
+            </div>
+            <a class="pill" id="customGo" target="_blank" rel="noopener noreferrer">搜索 Main →</a>
+            <button class="pill link-ish" data-copy-link="customGo" type="button">复制链接</button>
+          </div>
+          <div class="controls-sub" id="recentCash" hidden><span class="controls-sub-label">最近搜过</span></div>
+          <div class="hint" id="customHint" role="status" aria-live="polite"></div>
+          <p class="region-label">前后对比</p>
+          <p class="section-note" id="stripNote"></p>
+          <div class="date-strip" id="dateStrip"></div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="panel-two" role="tabpanel" aria-labelledby="tab-two" tabindex="0" hidden>
+        <div class="section-bar">
+          <div>
+            <p class="section-heading">两张单程票，各选 1 stop，2 + 2 = 4 段</p>
+            <p class="section-note">先定起点和终点（点交换就能反向），再从下面挑中间停留的城市。第一程用出发日期，第二程用第二程日期。</p>
+          </div>
+          <button class="pill link-ish" data-copy-panel="panel-two" type="button">复制本页链接</button>
+        </div>
+        <div class="group">
+          <div class="controls-row">
+            <div class="control-group">
+              <label for="legOrigin">起点</label>
+              <input class="code" id="legOrigin" list="airportList" maxlength="3" placeholder="SAN" autocomplete="off" spellcheck="false">
+            </div>
+            <button class="pill" data-swap="legOrigin,legDest" type="button">⇄ 交换</button>
+            <div class="control-group">
+              <label for="legDest">终点</label>
+              <input class="code" id="legDest" list="airportList" maxlength="3" placeholder="NYC" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+          <div class="controls-sub" id="presetRow"><span class="controls-sub-label">常用方向</span></div>
+          <div class="hint" id="legHint" role="status" aria-live="polite"></div>
+        </div>
+        <div id="stopBoards" class="stack"></div>
+      </section>
+
+      <section class="tab-panel" id="panel-tracker" role="tabpanel" aria-labelledby="tab-tracker" tabindex="0" hidden>
+        <div class="section-bar">
+          <div>
+            <p class="section-heading">Main 票价与 qualifying segments 记录器</p>
+            <p class="section-note">一条记录代表两张单程票。请在点进结果、选好实际中转后，按你本人承担的含税金额填写（多人同行不要填整单总额）；只有「已购 / 已飞」且亲自核对过资格的航段，才计入 8 段进度。</p>
+          </div>
+          <button class="pill link-ish" id="trackerExport" type="button">导出 CSV</button>
+        </div>
+
+        <div class="tracker-summary" id="trackerSummary" aria-live="polite"></div>
+
+        <form class="group tracker-form" id="trackerForm" novalidate>
+          <div class="group-header">
+            <div>
+              <span class="group-title" id="trackerFormTitle">记录一套方案</span>
+              <span class="group-subtitle">可以先只存路线，看到价格后再回来补齐或更新。</span>
+            </div>
+          </div>
+          <div class="tracker-form-grid">
+            <div class="form-field">
+              <label for="trackOrigin">起点</label>
+              <input class="code" id="trackOrigin" list="airportList" maxlength="3" placeholder="NYC" autocomplete="off" spellcheck="false" required>
+            </div>
+            <div class="form-field">
+              <label for="trackStop">停留城市</label>
+              <input class="code" id="trackStop" list="airportList" maxlength="3" placeholder="SEA" autocomplete="off" spellcheck="false" required>
+            </div>
+            <div class="form-field">
+              <label for="trackDest">最终目的地</label>
+              <input class="code" id="trackDest" list="airportList" maxlength="3" placeholder="SAN" autocomplete="off" spellcheck="false" required>
+            </div>
+            <div class="form-field">
+              <label for="trackStatus">状态</label>
+              <select id="trackStatus">
+                <option value="candidate">候选</option>
+                <option value="booked">已购</option>
+                <option value="flown">已飞</option>
+              </select>
+            </div>
+
+            <div class="form-field form-span-2">
+              <label for="trackDate1">第一程日期</label>
+              <input type="date" id="trackDate1" required>
+            </div>
+            <div class="form-field">
+              <label for="trackPrice1">第一张 Main 票价（USD）</label>
+              <input type="number" id="trackPrice1" min="0" step="0.01" inputmode="decimal" placeholder="例如 139">
+            </div>
+            <div class="form-field">
+              <label for="trackSegments1">第一张实际航段</label>
+              <select id="trackSegments1"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+            </div>
+            <div class="form-field form-span-2 tracker-second-start">
+              <label for="trackDate2">第二程日期</label>
+              <input type="date" id="trackDate2" required>
+            </div>
+
+            <div class="form-field">
+              <label for="trackPrice2">第二张 Main 票价（USD）</label>
+              <input type="number" id="trackPrice2" min="0" step="0.01" inputmode="decimal" placeholder="例如 119">
+            </div>
+            <div class="form-field">
+              <label for="trackSegments2">第二张实际航段</label>
+              <select id="trackSegments2"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+            </div>
+            <div class="form-field">
+              <label for="trackExtras">酒店 / 地面交通等（USD）</label>
+              <input type="number" id="trackExtras" min="0" step="0.01" inputmode="decimal" placeholder="0">
+            </div>
+            <div class="form-field">
+              <span class="form-label">资格核对</span>
+              <label class="inline-check" for="trackEligible"><input type="checkbox" id="trackEligible"><span>已确认 Main 且每个实际航段均符合挑战资格</span></label>
+            </div>
+
+            <div class="form-field form-span-2">
+              <label for="trackNote">备注</label>
+              <input type="text" id="trackNote" maxlength="160" placeholder="例如：SEA 停一晚；第二张需选 PDX 中转">
+            </div>
+          </div>
+
+          <div class="tracker-preview" id="trackerPreview" role="status" aria-live="polite">
+            <span>填入路线和价格后，这里会算每段成本。</span>
+            <div class="tracker-searches">
+              <a class="pill" id="trackerSearch1" target="_blank" rel="noopener noreferrer" aria-disabled="true">搜索第一程</a>
+              <a class="pill" id="trackerSearch2" target="_blank" rel="noopener noreferrer" aria-disabled="true">搜索第二程</a>
+            </div>
+          </div>
+          <div class="tracker-form-actions">
+            <button class="pill link-ish" id="trackerCancel" type="button" hidden>取消编辑</button>
+            <button class="pill" id="trackerSave" type="submit">保存方案</button>
+          </div>
+        </form>
+
+        <div class="tracker-toolbar">
+          <div class="filters">
+            <label for="trackerFilter">显示</label>
+            <select id="trackerFilter">
+              <option value="all">全部状态</option>
+              <option value="candidate">候选</option>
+              <option value="booked">已购</option>
+              <option value="flown">已飞</option>
+            </select>
+            <label for="trackerSort">排序</label>
+            <select id="trackerSort">
+              <option value="effective">全成本 / 段最低</option>
+              <option value="fare">纯票价 / 段最低</option>
+              <option value="total">总成本最低</option>
+              <option value="newest">最近更新</option>
+              <option value="status">状态</option>
+            </select>
+          </div>
+          <span class="section-note" id="trackerListCount"></span>
+        </div>
+
+        <div class="tracker-table-wrap">
+          <table class="tracker-table">
+            <caption class="sr-only">已记录的两张单程 Main 票价方案</caption>
+            <thead><tr><th scope="col">路线 / 日期</th><th scope="col">两张票价</th><th scope="col">航段</th><th scope="col">每段成本</th><th scope="col">状态</th><th scope="col">备注</th><th scope="col">操作</th></tr></thead>
+            <tbody id="trackerRows"></tbody>
+          </table>
+          <div class="tracker-empty" id="trackerEmpty">还没有方案。可以从「两程凑 4 段」点“＋ 记录”，也可以直接在上面填写。</div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="panel-matrix" role="tabpanel" aria-labelledby="tab-matrix" tabindex="0" hidden>
+        <div class="section-bar">
+          <div>
+            <p class="section-heading">东部 / 中部 → 西部比价矩阵</p>
+            <p class="section-note">一格就是一次搜索，点过的格子变成 ✓。鼠标停在某格会把整行整列一起提亮。没有直飞的组合会给出中转行程，对凑段反而更有利。</p>
+          </div>
+          <button class="pill link-ish" data-copy-panel="panel-matrix" type="button">复制本页链接</button>
+        </div>
+        <div class="mx-wrap">
+          <table class="mx" id="matrix"><caption class="sr-only">东部与中部机场到西部机场的 Main Cabin 搜索矩阵</caption></table>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="panel-west" role="tabpanel" aria-labelledby="tab-west" tabindex="0" hidden>
+        <div class="section-bar">
+          <div>
+            <p class="section-heading">西部短途与周末目的地</p>
+            <p class="section-note">Horizon / SkyWest 代飞 Alaska 的航段同样计入，短途往往是单段成本最低的选择。</p>
+          </div>
+          <button class="pill link-ish" data-copy-panel="panel-west" type="button">复制本页链接</button>
+        </div>
+        <div class="grid-2" id="westBoards"></div>
+      </section>
+
+      <section class="tab-panel" id="panel-hawaii" role="tabpanel" aria-labelledby="tab-hawaii" tabindex="0" hidden>
+        <div class="section-bar">
+          <div>
+            <p class="section-heading">夏威夷：单价通常最低的凑段方式</p>
+            <p class="section-note">Hawaiian 承运计入挑战，岛内一跳算一段。回程那一组用第二程日期，来回就是 2 段。</p>
+          </div>
+          <button class="pill link-ish" data-copy-panel="panel-hawaii" type="button">复制本页链接</button>
+        </div>
+        <div class="grid-2" id="hawaiiBoards"></div>
+      </section>
+
+      <section class="tab-panel" id="panel-rules" role="tabpanel" aria-labelledby="tab-rules" tabindex="0" hidden>
+        <p class="section-heading">下单前逐条过一遍</p>
+        <div class="grid-2">
+          <div class="check"><span class="check-n">01</span><span><b>选 Main，不选 Saver</b>Saver 是 X class，本挑战明确排除。</span></div>
+          <div class="check"><span class="check-n">02</span><span><b>逐段展开 Details</b>确认每段由 Alaska / Hawaiian 销售并承运，或 Horizon / SkyWest 代飞 Alaska。</span></div>
+          <div class="check"><span class="check-n">03</span><span><b>不要混入 AA 等 codeshare</b>即便在 alaskaair.com 上能买，合作航司或 oneworld 航段仍然不算。</span></div>
+          <div class="check"><span class="check-n">04</span><span><b>填对 Atmos Rewards 号码</b>每段必须 credit 到参加挑战的同一个账户。</span></div>
+          <div class="check"><span class="check-n">05</span><span><b>中转才是两段</b>直飞只算 1 段；两张单程票各选 1 stop，才是 2 + 2 = 4。</span></div>
+          <div class="check"><span class="check-n">06</span><span><b>在 180 天窗口内飞完</b>只出票不算，航班日期必须落在注册日起的 180 天内。</span></div>
+        </div>
+      </section>
     </div>
 
-    <div class="tabs">
-      <button class="tab active" data-direction="us2asia">
-        <span class="tab-arrow">→</span> Leaving US
-      </button>
-      <button class="tab" data-direction="asia2us">
-        <span class="tab-arrow">←</span> Back to US
-      </button>
+    <!-- ════════ 里程票 ════════ -->
+    <div class="mode-block" id="mode-award" hidden>
+      <div class="controls">
+        <div class="controls-row">
+          <div class="control-group">
+            <label for="awMonth">搜索月份</label>
+            <input type="date" id="awMonth">
+          </div>
+          <div class="control-group">
+            <span class="control-label" id="dirLabel">方向</span>
+            <div class="pill-row" role="group" aria-labelledby="dirLabel">
+              <button class="pill" data-dir="out" aria-pressed="true" type="button">离美 →</button>
+              <button class="pill" data-dir="in" aria-pressed="false" type="button">← 回美</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label for="awCabin">舱位</label>
+            <select id="awCabin">
+              <option value="">最低价（不限舱位）</option>
+              <option value="Main">Main（经济舱）</option>
+              <option value="Partner Premium">Partner Premium（超经）</option>
+              <option value="Partner Business">Partner Business（商务舱）</option>
+              <option value="First Class">First Class（头等舱）</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="awPax">人数</label>
+            <select id="awPax"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+          </div>
+        </div>
+        <div class="controls-sub" id="awPresets"><span class="controls-sub-label">常用月份</span></div>
+        <div class="hint" id="awModeNote"></div>
+        <div class="controls-foot">
+          <span class="grow">整月日历一次看完一个月的放位与里程价。</span>
+          <span class="count" id="awSeenCount"></span>
+          <button class="pill" data-open-next type="button">打开下一条未看</button>
+          <button class="pill link-ish" data-clear-seen type="button">清除标记</button>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="里程票搜索方式">
+        <button class="tab active" role="tab" id="tab-awcustom" aria-controls="panel-awcustom" aria-selected="true" tabindex="0" data-tab="awcustom" type="button">自定义搜索</button>
+        <button class="tab" role="tab" id="tab-asia" aria-controls="panel-asia" aria-selected="false" tabindex="-1" data-tab="asia" type="button">亚洲与中国</button>
+        <button class="tab" role="tab" id="tab-europe" aria-controls="panel-europe" aria-selected="false" tabindex="-1" data-tab="europe" type="button">欧洲</button>
+        <button class="tab" role="tab" id="tab-tips" aria-controls="panel-tips" aria-selected="false" tabindex="-1" data-tab="tips" type="button">里程票攻略</button>
+      </div>
+
+      <section class="tab-panel" id="panel-awcustom" role="tabpanel" aria-labelledby="tab-awcustom" tabindex="0">
+        <div class="section-bar">
+          <div>
+            <p class="section-heading">自定义里程票搜索</p>
+            <p class="section-note">预设路线之外的组合在这里搜。两端由你自己填，不受上面方向切换的影响。</p>
+          </div>
+        </div>
+        <div class="group">
+          <div class="controls-row">
+            <div class="control-group">
+              <label for="awOrigin">出发</label>
+              <input class="code" id="awOrigin" list="airportList" maxlength="3" placeholder="SFO" autocomplete="off" spellcheck="false">
+            </div>
+            <button class="pill" data-swap="awOrigin,awDest" type="button">⇄ 交换</button>
+            <div class="control-group">
+              <label for="awDest">到达</label>
+              <input class="code" id="awDest" list="airportList" maxlength="3" placeholder="HKG" autocomplete="off" spellcheck="false">
+            </div>
+            <a class="pill" id="awGo" target="_blank" rel="noopener noreferrer">搜索里程票 →</a>
+            <button class="pill link-ish" data-copy-link="awGo" type="button">复制链接</button>
+          </div>
+          <div class="controls-sub" id="recentAward" hidden><span class="controls-sub-label">最近搜过</span></div>
+          <div class="hint" id="awHint" role="status" aria-live="polite"></div>
+          <p class="region-label">前后对比</p>
+          <p class="section-note">同一条航线，相邻三个月的里程日历一起打开。放位常常按月成片出现，前后各看一个月很值。</p>
+          <div class="date-strip months" id="awStrip"></div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="panel-asia" role="tabpanel" aria-labelledby="tab-asia" tabindex="0" hidden>
+        <div class="section-bar">
+          <div>
+            <p class="section-heading">亚洲门户与中国大陆</p>
+            <p class="section-note">卡片右上角的标签是执飞这条线的 Atmos 伙伴。某个日期是直飞还是中转、要多少里程，都以日历里显示的为准。</p>
+          </div>
+          <button class="pill link-ish" data-copy-panel="panel-asia" type="button">复制本页链接</button>
+        </div>
+        <div id="asiaBoards" class="stack"></div>
+      </section>
+
+      <section class="tab-panel" id="panel-europe" role="tabpanel" aria-labelledby="tab-europe" tabindex="0" hidden>
+        <div class="section-bar">
+          <div>
+            <p class="section-heading">美国 ↔ 欧洲门户</p>
+            <p class="section-note">按距离定价，含一次免费中停。东岸出发落在最便宜的价格带，西岸要贵一档。</p>
+          </div>
+          <button class="pill link-ish" data-copy-panel="panel-europe" type="button">复制本页链接</button>
+        </div>
+        <div id="europeBoards" class="stack"></div>
+      </section>
+
+      <section class="tab-panel" id="panel-tips" role="tabpanel" aria-labelledby="tab-tips" tabindex="0" hidden>
+        <p class="section-heading">搜之前先知道这些</p>
+        <div id="tipsList" class="stack"></div>
+      </section>
     </div>
 
-    <div class="help">
-      <strong>How to open:</strong> click a code to jump there. To open in a new tab, hold <kbd>⌘</kbd> (Mac) or <kbd>Ctrl</kbd> (Windows) while clicking, or middle-click. To grab every route for one destination at once, click "Copy all" and paste anywhere.
-    </div>
+    <datalist id="airportList"></datalist>
 
-    <div id="sections"></div>
-
-    <div class="tip">
-      <span class="tip-label">Tags = the Atmos partner flying that route.</span>
-      Asia: HKG → Cathay · Tokyo → JAL · TPE → Starlux · ICN → Korean Air. Europe: MAD → Iberia · HEL → Finnair · DUB → Aer Lingus · CDG → American · LHR/FRA → American (or BA / Condor). Whether a date is nonstop or connecting — and the mileage price — is exactly what the calendar shows.
-    </div>
-
-    <div class="tip">
-      <span class="tip-label">Free stopover trick (one per one-way award):</span>
-      US → HKG (stop over) → PVG, or US → gateway (stop over) → onward Europe city, can be a <em>single</em> award instead of two. For Shenzhen, fly Cathay to HKG, then short hop / ferry / ground transfer across the border.
-    </div>
-
-    <div class="tip">
-      <span class="tip-label">Europe = great value, but dodge fuel surcharges:</span>
-      Iberia (MAD), Finnair (HEL) and Aer Lingus (DUB) run around 45k business one-way from the East Coast with ~$25 in fees — booking via Atmos avoids the surcharges Avios programs add. West Coast lands in a higher band. American metal (CDG / LHR / FRA) has no surcharges either. <strong>Avoid British Airways metal</strong> — surcharges can top $500 each way.
-    </div>
-
-    <div class="tip">
-      <span class="tip-label">One partner per award, no round-trip discount:</span>
-      Most awards use a single partner (Atmos only lets you mix among American, British Airways &amp; Finnair so far). Each direction is priced and ticketed on its own — so it is fine to use different partners on the two one-ways, and flexibility on either end helps.
-    </div>
-
-    <div class="tip">
-      <span class="tip-label">Asia reality + gotchas:</span>
-      Saver premium space on Cathay is brutal (rarely any); JAL business (~60k one-way) is the realistic premium sweet spot, economy is far easier. No fuel surcharges on Cathay / JAL / Starlux / Korean, but Hainan, BA &amp; Icelandair add them. Atmos blocks many partner awards within ~72h of departure, charges a small per-award partner booking fee, and shows "phantom" space that errors at booking — so try alternate dates if one fails.
-    </div>
-
-    <div class="footer">
-      Bookmark this page (<kbd>⌘D</kbd> / <kbd>Ctrl+D</kbd>) for quick access · your last direction / month / cabin / passengers are remembered on this device
-    </div>
+    <p class="footer">
+      按住 <kbd>⌘</kbd> / <kbd>Ctrl</kbd> 点击可在后台开新标签页。搜索结果是最终依据；参数、主题、已看标记与价格记录都保存在本机浏览器，重要记录可随时导出 CSV。
+    </p>
   </div>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
   <script>
-    // Tag = operating Atmos partner. No per-route nonstop/connection flag is hardcoded —
-    // the calendar search is the source of truth for routing and price.
-    const SECTIONS = [
-      {
-        heading: 'Trans-Pacific gateways — hunt award space on the long-haul leg',
-        note: 'The scarce, expensive part. Search the US to gateway leg here; add the short hop into the mainland (often a free stopover) once the long-haul is locked.',
-        destinations: [
-          {
-            code: 'HKG', name: 'Hong Kong', partner: 'Cathay Pacific', subtitle: 'gateway for Shenzhen / Guangzhou',
-            regions: [
-              { label: 'West Coast', cities: ['SFO', 'LAX', 'SEA', 'SAN', 'PDX'] },
-              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD'] }
-            ]
-          },
-          {
-            code: 'TYO', name: 'Tokyo', partner: 'Japan Airlines', subtitle: 'covers HND + NRT',
-            regions: [
-              { label: 'West Coast', cities: ['SEA', 'SFO', 'LAX', 'SAN', 'PDX'] },
-              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD', 'DFW'] }
-            ]
-          },
-          {
-            code: 'HND', name: 'Tokyo Haneda', partner: 'Japan Airlines', subtitle: '',
-            regions: [
-              { label: 'West Coast', cities: ['SEA', 'SFO', 'LAX', 'SAN'] },
-              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD'] }
-            ]
-          },
-          {
-            code: 'NRT', name: 'Tokyo Narita', partner: 'Japan Airlines', subtitle: '',
-            regions: [
-              { label: 'West Coast', cities: ['SFO', 'LAX', 'SEA', 'SAN'] },
-              { label: 'East / Central', cities: ['JFK', 'ORD'] }
-            ]
-          },
-          {
-            code: 'TPE', name: 'Taipei', partner: 'Starlux', subtitle: 'West Coast nonstops',
-            regions: [
-              { label: 'West Coast', cities: ['SFO', 'LAX', 'SEA', 'ONT'] }
-            ]
-          },
-          {
-            code: 'ICN', name: 'Seoul Incheon', partner: 'Korean Air', subtitle: 'many China connections',
-            regions: [
-              { label: 'West Coast', cities: ['SEA', 'SFO', 'LAX'] },
-              { label: 'East / Central', cities: ['JFK', 'ORD', 'ATL', 'IAD', 'DFW'] }
-            ]
-          }
-        ]
-      },
-      {
-        heading: 'Mainland China — full search, let Alaska build the routing',
-        note: 'Searches the whole US to Shanghai itinerary; Alaska auto-routes through a partner hub (shown) and may also surface a nonstop. Premium space is rare; economy is more findable.',
-        destinations: [
-          {
-            code: 'PVG', name: 'Shanghai', via: 'via TYO / HKG / ICN',
-            regions: [ { label: 'From US', cities: ['SFO', 'LAX', 'SEA', 'SAN', 'JFK', 'ORD'] } ]
-          }
-        ]
-      },
-      {
-        heading: 'US ↔ Europe gateways — miles to Europe are strong value',
-        note: 'Distance-priced with a free stopover. East-Coast departures hit the cheapest bands; West-Coast costs a band more. Iberia / Finnair / Aer Lingus are the low-fee sweet spots; American metal is also surcharge-free.',
-        destinations: [
-          {
-            code: 'MAD', name: 'Madrid', partner: 'Iberia', subtitle: 'low fees · sweet spot',
-            regions: [
-              { label: 'West Coast', cities: ['LAX', 'SFO'] },
-              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD', 'IAD', 'MIA'] }
-            ]
-          },
-          {
-            code: 'HEL', name: 'Helsinki', partner: 'Finnair', subtitle: 'low fees · gateway into Europe',
-            regions: [
-              { label: 'West Coast', cities: ['LAX', 'SEA'] },
-              { label: 'East / Central', cities: ['JFK', 'ORD', 'DFW'] }
-            ]
-          },
-          {
-            code: 'DUB', name: 'Dublin', partner: 'Aer Lingus', subtitle: '~45k biz from East Coast · US pre-clearance',
-            regions: [
-              { label: 'West Coast', cities: ['SFO', 'LAX', 'SEA'] },
-              { label: 'East / Central', cities: ['BOS', 'JFK', 'ORD', 'IAD', 'DFW'] }
-            ]
-          },
-          {
-            code: 'CDG', name: 'Paris', partner: 'American', subtitle: 'AA metal · no surcharge',
-            regions: [
-              { label: 'West Coast', cities: ['LAX'] },
-              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD', 'PHL', 'MIA', 'DFW'] }
-            ]
-          },
-          {
-            code: 'LHR', name: 'London', partner: 'BA / American', subtitle: 'BA adds big surcharges — prefer AA metal', warn: true,
-            regions: [
-              { label: 'West Coast', cities: ['LAX', 'SFO', 'SEA'] },
-              { label: 'East / Central', cities: ['JFK', 'BOS', 'ORD', 'DFW', 'PHL', 'MIA'] }
-            ]
-          },
-          {
-            code: 'FRA', name: 'Frankfurt', partner: 'Condor / American', subtitle: 'Condor or AA metal · no surcharge',
-            regions: [
-              { label: 'West Coast', cities: ['SEA', 'SFO', 'LAX', 'PDX'] },
-              { label: 'East / Central', cities: ['BOS', 'ORD', 'DFW'] }
-            ]
-          }
-        ]
-      }
+    const CALENDAR_BASE = 'https://www.alaskaair.com/search/calendar';
+    const RESULTS_BASE = 'https://www.alaskaair.com/search/results';
+    const STORAGE_KEY = 'atmos-search-console-v1';
+    const SEEN_KEY = 'alaska-main-segment-launcher-seen-v1';
+    const TRACKER_KEY = 'atmos-search-console-price-tracker-v1';
+    const TRACKER_GOAL = 8;
+    const TRACKER_STATUS = { candidate: '候选', booked: '已购', flown: '已飞' };
+
+    const AIRPORTS = [
+      ['NYC','New York 全部机场'], ['JFK','New York JFK'], ['EWR','Newark'],
+      ['BOS','Boston'], ['PHL','Philadelphia'], ['BWI','Baltimore'], ['DCA','Washington Reagan'], ['IAD','Washington Dulles'],
+      ['RDU','Raleigh-Durham'], ['ATL','Atlanta'], ['MIA','Miami'], ['MCO','Orlando'], ['TPA','Tampa'], ['FLL','Fort Lauderdale'],
+      ['ORD','Chicago O’Hare'], ['CHI','Chicago 全部机场'], ['MSP','Minneapolis'], ['DTW','Detroit'],
+      ['STL','St. Louis'], ['MCI','Kansas City'], ['BNA','Nashville'], ['DEN','Denver'],
+      ['DFW','Dallas'], ['AUS','Austin'], ['IAH','Houston'], ['SAT','San Antonio'], ['MSY','New Orleans'],
+      ['SEA','Seattle'], ['PDX','Portland'], ['SFO','San Francisco'], ['SJC','San Jose'], ['OAK','Oakland'],
+      ['LAX','Los Angeles'], ['SAN','San Diego'], ['SNA','Orange County'], ['ONT','Ontario CA'], ['BUR','Burbank'],
+      ['PSP','Palm Springs'], ['SMF','Sacramento'], ['FAT','Fresno'], ['RNO','Reno'], ['LAS','Las Vegas'], ['PHX','Phoenix'],
+      ['SLC','Salt Lake City'], ['GEG','Spokane'], ['BOI','Boise'], ['RDM','Bend / Redmond'], ['EUG','Eugene'],
+      ['MFR','Medford'], ['BLI','Bellingham'], ['PSC','Pasco'], ['ANC','Anchorage'],
+      ['HNL','Honolulu'], ['OGG','Kahului / Maui'], ['LIH','Lihue / Kauai'], ['KOA','Kona'], ['ITO','Hilo'],
+      ['HKG','香港'], ['TYO','东京 全部机场'], ['HND','东京羽田'], ['NRT','东京成田'], ['TPE','台北'],
+      ['ICN','首尔仁川'], ['PVG','上海浦东'], ['PEK','北京首都'], ['CAN','广州'], ['SZX','深圳'],
+      ['MAD','Madrid'], ['HEL','Helsinki'], ['DUB','Dublin'], ['CDG','Paris CDG'], ['LHR','London Heathrow'], ['FRA','Frankfurt']
+    ];
+    const NAME_OF = Object.fromEntries(AIRPORTS);
+
+    /* ═══ 现金刷段数据 ═══ */
+
+    const STOPOVER_GROUPS = [
+      { title: '西部小城', note: '几乎一定要经 SEA / PDX 连接，航段结构最干净，通常也最便宜',
+        codes: ['GEG','BOI','RDM','EUG','MFR','BLI','PSC','SMF','FAT'] },
+      { title: '西部大城', note: '班次多、停留方便，但两程都可能冒出直飞，必须手动挑 1 stop',
+        codes: ['SEA','PDX','SFO','SJC','OAK','LAX','SAN','LAS','PHX','SLC','ANC'] },
+      { title: '东部 / 中部热门城市', note: '西 → 东方向的停留点；先确认是 Alaska 自己的航线，别买成 AA codeshare',
+        codes: ['NYC','JFK','EWR','BOS','PHL','DCA','IAD','ORD','MSP','DTW','ATL','DEN','DFW','AUS','IAH'] },
+      { title: '夏威夷', note: 'Hawaiian 承运计入挑战，适合把停留变成一趟度假',
+        codes: ['HNL','OGG','KOA','LIH'] }
     ];
 
-    // Student travel windows. home = back to China (winter / summer break); back = return to US.
-    const datePresets = [
-      { label: "Sep '26 · back", value: '2026-09-01' },
-      { label: "Dec '26 · home", value: '2026-12-01' },
-      { label: "Jan '27 · back", value: '2027-01-01' },
-      { label: "Jun '27 · home", value: '2027-06-01' },
-      { label: "Sep '27 · back", value: '2027-09-01' }
+    const PRESETS = [
+      ['SAN','NYC','西 → 东'], ['NYC','SAN','东 → 西'],
+      ['SAN','ORD','SAN → 芝加哥'], ['SEA','JFK','SEA → JFK'],
+      ['BOS','SAN','BOS → SAN'], ['IAD','SEA','IAD → SEA'],
+      ['SAN','HNL','SAN → 夏威夷']
     ];
 
-    const STORE_KEY = 'atmos-launcher-v2';
-    function loadPrefs() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; } }
-    function savePrefs() {
-      try {
-        localStorage.setItem(STORE_KEY, JSON.stringify({
-          direction: currentDirection,
-          date: getDate(),
-          fare: getFareType(),
-          pax: getPax()
-        }));
-      } catch (e) { /* storage unavailable (e.g. sandbox) — ignore */ }
-    }
+    const MATRIX_DESTS = ['SEA','PDX','SFO','SJC','LAX','SAN','LAS','PHX','SLC','ANC','HNL'];
+    const MATRIX_ROWS = [
+      ['东北', ['JFK','EWR','BOS','PHL','BWI','DCA','IAD']],
+      ['东南', ['RDU','ATL','MCO','TPA','FLL']],
+      ['中部与山区', ['ORD','MSP','DTW','STL','MCI','BNA','DEN']],
+      ['南部与德州', ['DFW','AUS','IAH','SAT','MSY']]
+    ];
 
-    let currentDirection = 'us2asia';
+    const WEST_RUNS = [
+      { title: '从 SAN 出发', note: '周末短途先扫这些', origin: 'SAN', dests: ['SFO','SJC','SMF','PDX','SEA','LAS','PHX','SLC','BOI'] },
+      { title: '从 SEA 出发', note: '最便宜的一批短段，Horizon / SkyWest 代飞也算', origin: 'SEA', dests: ['PDX','GEG','BLI','PSC','EUG','RDM','BOI','SMF','ANC'] },
+      { title: '从 LAX 出发', note: '班次多，但注意别买到 partner-only 的行程', origin: 'LAX', dests: ['SFO','SJC','SMF','PDX','SEA','LAS','PHX','BOI','GEG'] },
+      { title: '从 SFO 出发', note: '可借 SEA / PDX 中转凑段', origin: 'SFO', dests: ['SAN','LAX','PDX','SEA','LAS','PHX','BOI','GEG','RDM'] },
+      { title: '南加州小机场 → SEA', note: '点出发地即可', origins: ['SNA','ONT','BUR','PSP','FAT','RNO','MFR'], dest: 'SEA' },
+      { title: 'SEA / PDX 放射线 → SAN', note: '回程方向单独比一次', origins: ['SEA','PDX'], dest: 'SAN' }
+    ];
 
-    function buildUrl(origin, dest, date, fareType, pax) {
-      let url = `https://www.alaskaair.com/search/calendar?O=${origin}&D=${dest}&OD=${date}&A=${pax}&RT=false&RequestType=Calendar&ShoppingMethod=onlineaward&int=flightresultsmicrosite%3Aviewby-calendar&locale=en-us`;
-      if (fareType) url += `&FareType=${fareType}`;
-      return url;
-    }
+    const HAWAII_RUNS = [
+      { title: '岛内出发：HNL', note: '每一跳算 1 段，票价通常是所有选项里最低的', origin: 'HNL', dests: ['OGG','LIH','KOA','ITO'] },
+      { title: '岛内回程 → HNL', note: '用第二程日期，来回凑成 2 段', origins: ['OGG','LIH','KOA','ITO'], dest: 'HNL', useDate: 'date2' },
+      { title: '串岛', note: '没有直飞时会给出经 HNL 的连接，段数反而更划算', pairs: [['OGG','KOA'],['OGG','LIH'],['KOA','LIH'],['ITO','OGG'],['LIH','ITO'],['KOA','ITO']] },
+      { title: '西岸飞夏威夷', note: '长途也只算 1 段，适合把往返凑进窗口', origins: ['SAN','LAX','SFO','SJC','SEA','PDX','LAS','PHX'], dest: 'HNL' }
+    ];
 
-    function getDate() { return document.getElementById('dateInput').value || '2026-09-01'; }
-    function getFareType() { return document.getElementById('fareInput').value; }
-    function getPax() { return document.getElementById('paxInput').value || '1'; }
+    /* ═══ 里程票数据 ═══ */
 
-    // us2asia (Leaving US): origin = US city, dest = overseas endpoint. asia2us (Back to US): reversed.
-    function resolveLeg(overseasCode, usCity) {
-      if (currentDirection === 'us2asia') return { origin: usCity, dest: overseasCode };
-      return { origin: overseasCode, dest: usCity };
-    }
-
-    function buildRouteLink(overseasCode, usCity) {
-      const link = document.createElement('a');
-      link.className = 'route-link';
-      const { origin, dest } = resolveLeg(overseasCode, usCity);
-      link.href = buildUrl(origin, dest, getDate(), getFareType(), getPax());
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.dataset.overseasCode = overseasCode;
-      link.dataset.usCity = usCity;
-
-      const code = document.createElement('span');
-      code.className = 'code';
-      code.textContent = usCity;
-      link.appendChild(code);
-      return link;
-    }
-
-    function getDestTitle(d) {
-      const prefix = currentDirection === 'us2asia' ? 'To' : 'From';
-      return `${prefix} ${d.name} (${d.code})`;
-    }
-
-    function renderDestination(d) {
-      const group = document.createElement('div');
-      group.className = 'group';
-
-      const header = document.createElement('div');
-      header.className = 'group-header';
-
-      const title = document.createElement('div');
-      const line = document.createElement('div');
-      const titleText = document.createElement('span');
-      titleText.className = 'group-title';
-      titleText.textContent = getDestTitle(d);
-      line.appendChild(titleText);
-
-      const badge = document.createElement('span');
-      if (d.partner) { badge.className = 'partner-badge'; badge.textContent = d.partner; }
-      else { badge.className = 'partner-badge via'; badge.textContent = d.via; }
-      line.appendChild(badge);
-      title.appendChild(line);
-
-      if (d.subtitle) {
-        const subtitle = document.createElement('span');
-        subtitle.className = 'group-subtitle' + (d.warn ? ' warn' : '');
-        subtitle.textContent = d.subtitle;
-        title.appendChild(subtitle);
-      }
-
-      const actions = document.createElement('div');
-      actions.className = 'group-actions';
-      const copyLink = document.createElement('a');
-      copyLink.textContent = 'Copy all';
-      copyLink.href = '#';
-      copyLink.onclick = (e) => { e.preventDefault(); copyDestLinks(d); };
-      actions.appendChild(copyLink);
-
-      header.appendChild(title);
-      header.appendChild(actions);
-      group.appendChild(header);
-
-      d.regions.forEach(region => {
-        const label = document.createElement('div');
-        label.className = 'region-label';
-        label.textContent = region.label;
-        group.appendChild(label);
-
-        const row = document.createElement('div');
-        row.className = 'row';
-        region.cities.forEach(city => row.appendChild(buildRouteLink(d.code, city)));
-        group.appendChild(row);
-      });
-
-      return group;
-    }
-
-    function renderSections() {
-      const root = document.getElementById('sections');
-      root.innerHTML = '';
-      SECTIONS.forEach(sec => {
-        const h = document.createElement('div');
-        h.className = 'section-heading';
-        h.textContent = sec.heading;
-        root.appendChild(h);
-
-        if (sec.note) {
-          const n = document.createElement('div');
-          n.className = 'section-note';
-          n.textContent = sec.note;
-          root.appendChild(n);
+    const AWARD_BOARDS = {
+      asia: [
+        {
+          heading: '跨太平洋门户',
+          note: '长途段才是稀缺又贵的那一截。先在这里搜美国到门户城市的这一程，锁定之后再补进中国大陆的短途接驳，常常可以做成免费中停。',
+          destinations: [
+            { code: 'HKG', name: '香港', partner: 'Cathay Pacific', subtitle: '深圳 / 广州的门户',
+              regions: [{ label: '西岸', cities: ['SFO','LAX','SEA','SAN','PDX'] }, { label: '东部 / 中部', cities: ['JFK','BOS','ORD'] }] },
+            { code: 'TYO', name: '东京', partner: 'Japan Airlines', subtitle: '同时覆盖 HND + NRT',
+              regions: [{ label: '西岸', cities: ['SEA','SFO','LAX','SAN','PDX'] }, { label: '东部 / 中部', cities: ['JFK','BOS','ORD','DFW'] }] },
+            { code: 'HND', name: '东京羽田', partner: 'Japan Airlines', subtitle: '',
+              regions: [{ label: '西岸', cities: ['SEA','SFO','LAX','SAN'] }, { label: '东部 / 中部', cities: ['JFK','BOS','ORD'] }] },
+            { code: 'NRT', name: '东京成田', partner: 'Japan Airlines', subtitle: '',
+              regions: [{ label: '西岸', cities: ['SFO','LAX','SEA','SAN'] }, { label: '东部 / 中部', cities: ['JFK','ORD'] }] },
+            { code: 'TPE', name: '台北', partner: 'Starlux', subtitle: '西岸直飞',
+              regions: [{ label: '西岸', cities: ['SFO','LAX','SEA','ONT'] }] },
+            { code: 'ICN', name: '首尔仁川', partner: 'Korean Air', subtitle: '转中国内陆的选择很多',
+              regions: [{ label: '西岸', cities: ['SEA','SFO','LAX'] }, { label: '东部 / 中部', cities: ['JFK','ORD','ATL','IAD','DFW'] }] }
+          ]
+        },
+        {
+          heading: '中国大陆',
+          note: '直接搜完整的美国到上海行程，Alaska 会自动经伙伴航司的枢纽拼接，有时也会冒出直飞。premium 舱位很少，经济舱好找得多。',
+          destinations: [
+            { code: 'PVG', name: '上海', via: '经 TYO / HKG / ICN',
+              regions: [{ label: '从美国出发', cities: ['SFO','LAX','SEA','SAN','JFK','ORD'] }] }
+          ]
         }
+      ],
+      europe: [
+        {
+          heading: '欧洲门户',
+          note: 'Iberia / Finnair / Aer Lingus 是低税费的甜点，American 自家的飞机同样没有燃油附加费。',
+          destinations: [
+            { code: 'MAD', name: 'Madrid', partner: 'Iberia', subtitle: '税费低 · 甜点',
+              regions: [{ label: '西岸', cities: ['LAX','SFO'] }, { label: '东部 / 中部', cities: ['JFK','BOS','ORD','IAD','MIA'] }] },
+            { code: 'HEL', name: 'Helsinki', partner: 'Finnair', subtitle: '税费低 · 进欧洲的门户',
+              regions: [{ label: '西岸', cities: ['LAX','SEA'] }, { label: '东部 / 中部', cities: ['JFK','ORD','DFW'] }] },
+            { code: 'DUB', name: 'Dublin', partner: 'Aer Lingus', subtitle: '东岸出发商务舱约 45k · 有美国预清关',
+              regions: [{ label: '西岸', cities: ['SFO','LAX','SEA'] }, { label: '东部 / 中部', cities: ['BOS','JFK','ORD','IAD','DFW'] }] },
+            { code: 'CDG', name: 'Paris', partner: 'American', subtitle: 'AA 自家飞机 · 无燃油附加费',
+              regions: [{ label: '西岸', cities: ['LAX'] }, { label: '东部 / 中部', cities: ['JFK','BOS','ORD','PHL','MIA','DFW'] }] },
+            { code: 'LHR', name: 'London', partner: 'BA / American', subtitle: 'BA 的飞机附加费很高，尽量挑 AA 自家的', warn: true,
+              regions: [{ label: '西岸', cities: ['LAX','SFO','SEA'] }, { label: '东部 / 中部', cities: ['JFK','BOS','ORD','DFW','PHL','MIA'] }] },
+            { code: 'FRA', name: 'Frankfurt', partner: 'Condor / American', subtitle: 'Condor 或 AA 自家飞机 · 无附加费',
+              regions: [{ label: '西岸', cities: ['SEA','SFO','LAX','PDX'] }, { label: '东部 / 中部', cities: ['BOS','ORD','DFW'] }] }
+          ]
+        }
+      ]
+    };
 
-        const grid = document.createElement('div');
-        grid.className = 'grid';
-        sec.destinations.forEach(d => grid.appendChild(renderDestination(d)));
-        root.appendChild(grid);
+    const AWARD_MONTHS = [
+      { label: '26年9月 · 返美', value: '2026-09-01' },
+      { label: '26年12月 · 回国', value: '2026-12-01' },
+      { label: '27年1月 · 返美', value: '2027-01-01' },
+      { label: '27年6月 · 回国', value: '2027-06-01' },
+      { label: '27年9月 · 返美', value: '2027-09-01' }
+    ];
+
+    const PARTNER_MAP = [
+      ['HKG','Cathay Pacific'], ['TYO / HND / NRT','Japan Airlines'], ['TPE','Starlux'], ['ICN','Korean Air'],
+      ['MAD','Iberia'], ['HEL','Finnair'], ['DUB','Aer Lingus'], ['CDG','American'], ['LHR / FRA','American（或 BA / Condor）']
+    ];
+
+    const AWARD_TIPS = [
+      { title: '标签就是执飞这条线的 Atmos 伙伴',
+        body: '某个日期是直飞还是中转、要多少里程，一切以日历里显示的为准，页面不做任何预判。',
+        map: true },
+      { title: '免费中停：每张单程奖励票一次',
+        body: '美国 → HKG（中停）→ PVG，或者 美国 → 门户城市（中停）→ 欧洲某城，可以只开<strong>一张</strong>奖励票而不是两张。去深圳的话，先坐 Cathay 到 HKG，再短途 / 渡轮 / 陆路过关。' },
+      { title: '欧洲性价比很高，但要绕开燃油附加费',
+        body: 'Iberia（MAD）、Finnair（HEL）、Aer Lingus（DUB）从东岸出发商务舱单程大约 45k 里程加 25 美元左右税费，走 Atmos 出票可以避开 Avios 体系另加的附加费。西岸出发要贵一档。American 自家的飞机（CDG / LHR / FRA）同样没有附加费。<strong>避开 British Airways 的飞机</strong>，附加费单程可能超过 500 美元。',
+        warn: true },
+      { title: '一张票一个伙伴，往返没有折扣',
+        body: '绝大多数奖励票只能用一个伙伴，目前 Atmos 只允许在 American、British Airways 和 Finnair 之间混合。每个方向单独定价、单独出票，所以两个单程用不同伙伴完全可以，两头都保持灵活会好找很多。' },
+      { title: '亚洲的现实情况与坑',
+        body: 'Cathay 的 saver premium 舱位极难放，基本等于没有；JAL 商务舱（单程约 60k）才是现实里的 premium 甜点，经济舱容易得多。Cathay / JAL / Starlux / Korean 都没有燃油附加费，Hainan、BA 和 Icelandair 会加。Atmos 还会屏蔽起飞前约 72 小时内的很多伙伴奖励票，每张票收一笔小额伙伴出票费，并且会显示「幽灵」舱位（下单时报错），遇到失败就换个日期再试。' }
+    ];
+
+    /* ═══ 工具 ═══ */
+
+    const el = id => document.getElementById(id);
+    const ISO = /^\d{4}-\d{2}-\d{2}$/;
+    const MARK = '<span class="seen-mark" aria-hidden="true">✓</span>';
+
+    let mode = 'cash';
+    let direction = 'out';
+    let recents = { cash: [], award: [] };
+    let trackerPlans = [];
+    let trackerEditingId = null;
+
+    function isoDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    function todayISO() { return isoDate(new Date()); }
+    // 清空或粘贴出来的乱值一律回落到今天，不会生成 OD= 为空的链接
+    function safeDate(v) { return ISO.test(v || '') ? v : todayISO(); }
+    function dateOf(id) { return safeDate(el(id).value); }
+    function addDays(v, n) { const d = new Date(`${safeDate(v)}T12:00:00`); d.setDate(d.getDate() + n); return isoDate(d); }
+    function addMonths(v, n) { const d = new Date(`${safeDate(v).slice(0, 7)}-01T12:00:00`); d.setMonth(d.getMonth() + n); return isoDate(d); }
+    function shortDate(v) { return safeDate(v).slice(5).replace('-', '/'); }
+    function monthLabel(v) { return safeDate(v).slice(0, 7); }
+    // 里程票按月搜：本月取今天，未来月份取 1 号，绝不送出过去的日期
+    function monthStart(v) { const first = `${safeDate(v).slice(0, 7)}-01`; return first < todayISO() ? todayISO() : first; }
+    function normalizeCode(v) { return (v || '').trim().toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3); }
+    function codeOf(id) { return normalizeCode(el(id).value); }
+    function escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+    }
+
+    /* ---------- URL ---------- */
+
+    function cashUrl(o, d, date) {
+      const flexible = el('searchMode').value === 'flexible';
+      const safe = safeDate(date);
+      const p = new URLSearchParams({
+        O: o.toUpperCase(), D: d.toUpperCase(), OD: safe,
+        A: el('pax').value || '1', RT: 'false', locale: 'en-us', FareType: 'Main'
+      });
+      if (flexible) {
+        p.set('RequestType', 'Calendar');
+        p.set('int', 'flightresultsmicrosite:viewby-calendar');
+        p.set('CM', safe.slice(0, 7));
+      } else {
+        p.set('DD', '');
+      }
+      return `${flexible ? CALENDAR_BASE : RESULTS_BASE}?${p.toString()}`;
+    }
+
+    function awardUrl(o, d, date) {
+      const p = new URLSearchParams({
+        O: o.toUpperCase(), D: d.toUpperCase(), OD: monthStart(date),
+        A: el('awPax').value || '1', RT: 'false', RequestType: 'Calendar',
+        ShoppingMethod: 'onlineaward', int: 'flightresultsmicrosite:viewby-calendar', locale: 'en-us'
+      });
+      // 舱位值带空格，URLSearchParams 序列化成 "+"，正是 Alaska 期望的写法
+      const cabin = el('awCabin').value;
+      if (cabin) p.set('FareType', cabin);
+      return `${CALENDAR_BASE}?${p.toString()}`;
+    }
+
+    function buildUrl(o, d, date) { return mode === 'award' ? awardUrl(o, d, date) : cashUrl(o, d, date); }
+
+    /* ---------- 已看过标记 ---------- */
+
+    let seen = new Set();
+    try {
+      const raw = JSON.parse(localStorage.getItem(SEEN_KEY));
+      if (Array.isArray(raw)) seen = new Set(raw);
+    } catch (_) {}
+    function saveSeen() { try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seen])); } catch (_) {} }
+    // 只按模式 + 航线 + 日期做 key，改人数或舱位不会把标记冲掉
+    function seenKey(o, d, date) {
+      const stamp = mode === 'award' ? safeDate(date).slice(0, 7) : safeDate(date);
+      return `${mode}:${o}>${d}@${stamp}`;
+    }
+
+    function activeBlock() { return el(mode === 'award' ? 'mode-award' : 'mode-cash'); }
+    function activePanel() { return activeBlock().querySelector('.tab-panel:not([hidden])'); }
+
+    function refreshSeen() {
+      const links = activeBlock().querySelectorAll('a[data-seen-key]');
+      let hit = 0;
+      links.forEach(a => {
+        const on = seen.has(a.dataset.seenKey);
+        if (on) hit++;
+        a.classList.toggle('seen', on);
+      });
+      el(mode === 'award' ? 'awSeenCount' : 'cashSeenCount').textContent = `已看过 ${hit} / ${links.length}`;
+
+      const panel = activePanel();
+      const left = panel ? [...panel.querySelectorAll('a[href][data-seen-key]')].filter(a => !seen.has(a.dataset.seenKey)).length : 0;
+      activeBlock().querySelectorAll('[data-open-next]').forEach(b => {
+        b.textContent = left ? `打开下一条未看 · 剩 ${left}` : '本页都看过了';
+        b.disabled = !left;
       });
     }
 
-    function refreshAllLinks() {
-      const date = getDate();
-      const fareType = getFareType();
-      const pax = getPax();
-      document.querySelectorAll('a.route-link').forEach(link => {
-        const { origin, dest } = resolveLeg(link.dataset.overseasCode, link.dataset.usCity);
-        link.href = buildUrl(origin, dest, date, fareType, pax);
+    // 逐条打开：每次点击只开一个窗口，不会被浏览器的弹窗拦截挡下
+    function openNextUnseen() {
+      const panel = activePanel();
+      if (!panel) return;
+      const next = [...panel.querySelectorAll('a[href][data-seen-key]')].find(a => !seen.has(a.dataset.seenKey));
+      if (!next) { showToast('这个 tab 的链接都看过了'); return; }
+      window.open(next.href, '_blank', 'noopener');
+      seen.add(next.dataset.seenKey);
+      saveSeen();
+      refreshSeen();
+    }
+
+    function makeLink(o, d, date, className, inner, label) {
+      const safe = safeDate(date);
+      const a = document.createElement('a');
+      a.className = className;
+      a.href = buildUrl(o, d, safe);
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.dataset.seenKey = seenKey(o, d, safe);
+      if (label) a.title = label;
+      a.innerHTML = inner;
+      return a;
+    }
+
+    /* ---------- 存档 ---------- */
+
+    function prefs() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch (_) { return {}; } }
+    function activeTabOf(blockId) { const t = el(blockId).querySelector('.tab.active'); return t ? t.dataset.tab : null; }
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          mode, direction, recents,
+          theme: document.documentElement.dataset.theme || 'auto',
+          date1: el('date1').value, date2: el('date2').value,
+          pax: el('pax').value, searchMode: el('searchMode').value,
+          origin: el('origin').value, destination: el('destination').value,
+          legOrigin: el('legOrigin').value, legDest: el('legDest').value,
+          trackerSort: el('trackerSort').value, trackerFilter: el('trackerFilter').value,
+          awMonth: el('awMonth').value, awCabin: el('awCabin').value, awPax: el('awPax').value,
+          awOrigin: el('awOrigin').value, awDest: el('awDest').value,
+          cashTab: activeTabOf('mode-cash'), awardTab: activeTabOf('mode-award')
+        }));
+      } catch (_) {}
+    }
+
+    /* ---------- 最近搜过 ---------- */
+
+    function pushRecent(o, d) {
+      if (o.length !== 3 || d.length !== 3) return;
+      const pair = `${o}>${d}`;
+      recents[mode] = [pair, ...(recents[mode] || []).filter(x => x !== pair)].slice(0, 6);
+      renderRecents();
+      save();
+    }
+
+    function renderRecents() {
+      const box = el(mode === 'award' ? 'recentAward' : 'recentCash');
+      if (!box) return;
+      box.querySelectorAll('.pill').forEach(b => b.remove());
+      const list = recents[mode] || [];
+      box.hidden = !list.length;
+      list.forEach(pair => {
+        const [o, d] = pair.split('>');
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pill';
+        b.dataset.recent = pair;
+        b.textContent = `${o} → ${d}`;
+        box.appendChild(b);
       });
     }
 
-    function copyDestLinks(d) {
-      const date = getDate();
-      const fareType = getFareType();
-      const pax = getPax();
-      const allCities = d.regions.flatMap(r => r.cities);
-      const lines = allCities.map(city => {
-        const { origin, dest } = resolveLeg(d.code, city);
-        return `${origin} → ${dest}: ${buildUrl(origin, dest, date, fareType, pax)}`;
-      });
-      const text = lines.join('\n');
-      navigator.clipboard.writeText(text).then(() => {
-        alert(`Copied ${allCities.length} links for ${d.code} to clipboard.\n\nPaste anywhere and Cmd/Ctrl+click each one.`);
-      }).catch(() => {
-        prompt('Copy these links manually:', text);
-      });
+    /* ═══ 现金刷段渲染 ═══ */
+
+    function normalizeDates(source) {
+      const min = todayISO();
+      let d1 = safeDate(el('date1').value);
+      if (d1 < min) d1 = min;
+      el('date1').value = d1;
+      el('date1').min = min;
+      let d2 = safeDate(el('date2').value);
+      if (d2 < d1) d2 = source === 'date2' ? d1 : addDays(d1, 2);
+      el('date2').value = d2;
+      el('date2').min = d1;
     }
 
-    function syncPresetHighlight() {
-      const current = getDate();
-      document.querySelectorAll('.preset-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.value === current);
+    function setGoState(goId, hintId, o, d, urlFn, exampleCode) {
+      const complete = o.length === 3 && d.length === 3;
+      const same = complete && o === d;
+      const go = el(goId);
+      const hint = el(hintId);
+      if (complete && !same) {
+        go.href = urlFn();
+        go.removeAttribute('aria-disabled');
+        const from = NAME_OF[o] ? `${o} · ${NAME_OF[o]}` : o;
+        const to = NAME_OF[d] ? `${d} · ${NAME_OF[d]}` : d;
+        hint.textContent = `当前路线：${from} → ${to}`;
+        hint.classList.remove('warn');
+      } else {
+        go.removeAttribute('href');
+        go.setAttribute('aria-disabled', 'true');
+        hint.textContent = same ? '出发和到达不能是同一个机场。' : (complete ? '' : `机场代码要填满 3 个字母，例如 ${exampleCode}。`);
+        hint.classList.toggle('warn', same);
+      }
+    }
+
+    function updateCustom() {
+      const o = codeOf('origin'), d = codeOf('destination');
+      el('origin').value = o;
+      el('destination').value = d;
+      setGoState('customGo', 'customHint', o, d, () => cashUrl(o, d, dateOf('date1')), 'SEA');
+      renderDateStrip();
+    }
+
+    function renderDateStrip() {
+      const root = el('dateStrip');
+      root.innerHTML = '';
+      const flexible = el('searchMode').value === 'flexible';
+      root.classList.toggle('months', flexible);
+      el('stripNote').textContent = flexible
+        ? '同一条航线，相邻三个月的整月日历一起打开。切到 Exact 会变成前后 7 天。'
+        : '同一条航线，前后 7 天各开一个页面。切到 Flexible 会变成相邻月份。';
+
+      const o = codeOf('origin'), d = codeOf('destination');
+      if (o.length !== 3 || d.length !== 3 || o === d) return;
+      const base = dateOf('date1'), today = todayISO();
+
+      (flexible ? [-1, 0, 1] : [-3, -2, -1, 0, 1, 2, 3]).forEach(offset => {
+        const date = flexible ? addMonths(base, offset) : addDays(base, offset);
+        // 月份只要还有未来的日子就仍可订，所以 flexible 比月份、exact 比当天
+        if (offset < 0 && (flexible ? date.slice(0, 7) < today.slice(0, 7) : date < today)) return;
+        const dt = new Date(`${date}T12:00:00`);
+        const inner = flexible
+          ? `<span class="w">${offset === 0 ? '本月' : (offset < 0 ? '上个月' : '下个月')}</span><span class="d">${monthLabel(date)}${MARK}</span>`
+          : `<span class="w">${dt.toLocaleDateString('zh-CN', { weekday: 'short' })}</span><span class="d">${shortDate(date)}${MARK}</span>`;
+        root.appendChild(makeLink(o, d, date, 'date-link' + (offset === 0 ? ' center' : ''), inner, `${o} → ${d} · ${date}`));
       });
     }
 
     function renderPresets() {
-      const container = document.getElementById('presets');
-      datePresets.forEach(p => {
-        const btn = document.createElement('button');
-        btn.className = 'preset-btn';
-        btn.textContent = p.label;
-        btn.dataset.value = p.value;
-        btn.onclick = () => {
-          document.getElementById('dateInput').value = p.value;
-          refreshAllLinks();
-          syncPresetHighlight();
-          savePrefs();
-        };
-        container.appendChild(btn);
+      const row = el('presetRow');
+      row.querySelectorAll('.pill').forEach(b => b.remove());
+      PRESETS.forEach(([o, d, label]) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pill';
+        b.dataset.preset = `${o},${d}`;
+        b.textContent = label;
+        row.appendChild(b);
       });
     }
 
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentDirection = tab.dataset.direction;
-        renderSections();
-        savePrefs();
-      });
-    });
-
-    document.getElementById('dateInput').addEventListener('change', () => {
-      refreshAllLinks();
-      syncPresetHighlight();
-      savePrefs();
-    });
-    document.getElementById('fareInput').addEventListener('change', () => { refreshAllLinks(); savePrefs(); });
-    document.getElementById('paxInput').addEventListener('change', () => { refreshAllLinks(); savePrefs(); });
-
-    // ---- init: restore saved prefs, then render ----
-    (function init() {
-      const prefs = loadPrefs();
-      if (prefs.direction === 'us2asia' || prefs.direction === 'asia2us') {
-        currentDirection = prefs.direction;
-        document.querySelectorAll('.tab').forEach(t => {
-          t.classList.toggle('active', t.dataset.direction === currentDirection);
-        });
+    function renderStopBoards() {
+      const root = el('stopBoards');
+      root.innerHTML = '';
+      const o = codeOf('legOrigin'), d = codeOf('legDest');
+      const d1 = dateOf('date1'), d2 = dateOf('date2');
+      if (o.length !== 3 || d.length !== 3 || o === d) {
+        el('legHint').textContent = (o === d && o.length === 3) ? '起点和终点不能是同一个机场。' : '起点和终点都要填满 3 个字母。';
+        el('legHint').classList.add('warn');
+        return;
       }
-      if (prefs.date) document.getElementById('dateInput').value = prefs.date;
-      if (prefs.fare !== undefined) document.getElementById('fareInput').value = prefs.fare;
-      if (prefs.pax) document.getElementById('paxInput').value = prefs.pax;
+      const from = NAME_OF[o] ? `${o} · ${NAME_OF[o]}` : o;
+      const to = NAME_OF[d] ? `${d} · ${NAME_OF[d]}` : d;
+      el('legHint').textContent = `当前路线：${from} → ${to}`;
+      el('legHint').classList.remove('warn');
+
+      STOPOVER_GROUPS.forEach(group => {
+        const codes = group.codes.filter(c => c !== o && c !== d);
+        if (!codes.length) return;
+        const box = document.createElement('div');
+        box.className = 'group';
+        box.innerHTML = `<div class="group-header"><div><span class="group-title">${group.title}</span><span class="group-subtitle">${group.note}</span></div><button class="pill link-ish" data-copy-group type="button">复制这组</button></div>`;
+        const list = document.createElement('ul');
+        list.className = 'stop-list';
+        codes.forEach(code => {
+          const li = document.createElement('li');
+          li.className = 'stop-row';
+          li.innerHTML = `<span class="stop-code">${code}</span><span class="stop-name">${NAME_OF[code] || ''}</span>`;
+          li.appendChild(makeLink(o, code, d1, 'leg', `${o} → ${code}<span class="when">${shortDate(d1)}</span>${MARK}`, `第一程 ${o} → ${code} · ${d1} · 选 1 stop`));
+          li.appendChild(makeLink(code, d, d2, 'leg', `${code} → ${d}<span class="when">${shortDate(d2)}</span>${MARK}`, `第二程 ${code} → ${d} · ${d2} · 选 1 stop`));
+          const add = document.createElement('button');
+          add.type = 'button';
+          add.className = 'pill';
+          add.dataset.trackStop = code;
+          add.textContent = '＋ 记录';
+          add.setAttribute('aria-label', `把 ${o} 经 ${code} 到 ${d} 加入价格记录器`);
+          li.appendChild(add);
+          list.appendChild(li);
+        });
+        box.appendChild(list);
+        root.appendChild(box);
+      });
+    }
+
+    /* ═══ 价格记录器 ═══ */
+
+    function trackerId() {
+      if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') return globalThis.crypto.randomUUID();
+      return `plan-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    }
+
+    function trackerNumber(value) {
+      if (value === '' || value === null || value === undefined) return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
+    }
+
+    function normalizeTrackerPlan(raw) {
+      if (!raw || typeof raw !== 'object') return null;
+      const origin = normalizeCode(raw.origin);
+      const stop = normalizeCode(raw.stop);
+      const destination = normalizeCode(raw.destination);
+      if (origin.length !== 3 || stop.length !== 3 || destination.length !== 3 || stop === origin || stop === destination) return null;
+      const date1 = ISO.test(raw.date1 || '') ? raw.date1 : todayISO();
+      const date2 = ISO.test(raw.date2 || '') ? raw.date2 : date1;
+      const status = Object.prototype.hasOwnProperty.call(TRACKER_STATUS, raw.status) ? raw.status : 'candidate';
+      const segments1 = Math.min(8, Math.max(1, Math.round(Number(raw.segments1) || 2)));
+      const segments2 = Math.min(8, Math.max(1, Math.round(Number(raw.segments2) || 2)));
+      const createdAt = typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString();
+      const price1 = trackerNumber(raw.price1);
+      const price2 = trackerNumber(raw.price2);
+      return {
+        id: String(raw.id || trackerId()), origin, stop, destination, date1,
+        date2: date2 < date1 ? date1 : date2,
+        price1: price1 !== null && price1 >= 0 ? price1 : null,
+        price2: price2 !== null && price2 >= 0 ? price2 : null,
+        segments1, segments2,
+        extras: Math.max(0, trackerNumber(raw.extras) || 0),
+        status, eligible: Boolean(raw.eligible),
+        note: String(raw.note || '').slice(0, 160),
+        createdAt,
+        updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : createdAt
+      };
+    }
+
+    function loadTrackerPlans() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(TRACKER_KEY));
+        const list = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.plans) ? raw.plans : []);
+        return list.map(normalizeTrackerPlan).filter(Boolean);
+      } catch (_) { return []; }
+    }
+
+    function saveTrackerPlans() {
+      try { localStorage.setItem(TRACKER_KEY, JSON.stringify({ version: 1, plans: trackerPlans })); } catch (_) {}
+    }
+
+    function trackerDraft() {
+      return {
+        origin: codeOf('trackOrigin'), stop: codeOf('trackStop'), destination: codeOf('trackDest'),
+        date1: el('trackDate1').value, date2: el('trackDate2').value,
+        price1: trackerNumber(el('trackPrice1').value), price2: trackerNumber(el('trackPrice2').value),
+        segments1: Number(el('trackSegments1').value), segments2: Number(el('trackSegments2').value),
+        extras: trackerNumber(el('trackExtras').value) || 0,
+        status: el('trackStatus').value,
+        eligible: el('trackEligible').checked,
+        note: el('trackNote').value.trim()
+      };
+    }
+
+    function trackerCalc(plan) {
+      const segments = (Number(plan.segments1) || 0) + (Number(plan.segments2) || 0);
+      const p1 = trackerNumber(plan.price1);
+      const p2 = trackerNumber(plan.price2);
+      const airfare = p1 !== null && p2 !== null ? p1 + p2 : null;
+      const extras = Math.max(0, trackerNumber(plan.extras) || 0);
+      const total = airfare === null ? null : airfare + extras;
+      return {
+        segments, airfare, extras, total,
+        farePerSegment: airfare !== null && segments ? airfare / segments : null,
+        effectivePerSegment: total !== null && segments ? total / segments : null
+      };
+    }
+
+    function trackerFormIssue(plan) {
+      if (plan.origin.length !== 3) return { id: 'trackOrigin', message: '起点要填满 3 个字母。' };
+      if (plan.stop.length !== 3) return { id: 'trackStop', message: '停留城市要填满 3 个字母。' };
+      if (plan.destination.length !== 3) return { id: 'trackDest', message: '最终目的地要填满 3 个字母。' };
+      if (plan.stop === plan.origin || plan.stop === plan.destination) return { id: 'trackStop', message: '停留城市不能和起点或终点相同。' };
+      if (!ISO.test(plan.date1 || '')) return { id: 'trackDate1', message: '请选择第一程日期。' };
+      if (!ISO.test(plan.date2 || '')) return { id: 'trackDate2', message: '请选择第二程日期。' };
+      if (plan.date2 < plan.date1) return { id: 'trackDate2', message: '第二程日期不能早于第一程。' };
+      for (const id of ['trackPrice1', 'trackPrice2', 'trackExtras']) {
+        const raw = el(id).value.trim();
+        if (raw !== '' && (!Number.isFinite(Number(raw)) || Number(raw) < 0)) return { id, message: '金额不能是负数。' };
+      }
+      return null;
+    }
+
+    function formatMoney(value) {
+      if (!Number.isFinite(value)) return '—';
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency', currency: 'USD',
+        minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+        maximumFractionDigits: 2
+      }).format(value);
+    }
+
+    function updateTrackerSearchLink(id, o, d, date, label) {
+      const link = el(id);
+      const valid = o.length === 3 && d.length === 3 && o !== d && ISO.test(date || '');
+      link.textContent = valid ? `${label} ${o} → ${d}` : label;
+      if (!valid) {
+        link.removeAttribute('href');
+        link.removeAttribute('data-seen-key');
+        link.setAttribute('aria-disabled', 'true');
+        link.classList.remove('seen');
+        return;
+      }
+      const key = `cash:${o}>${d}@${date}`;
+      link.href = cashUrl(o, d, date);
+      link.dataset.seenKey = key;
+      link.setAttribute('aria-disabled', 'false');
+      link.classList.toggle('seen', seen.has(key));
+    }
+
+    function updateTrackerForm() {
+      for (const id of ['trackOrigin', 'trackStop', 'trackDest']) el(id).value = codeOf(id);
+      const plan = trackerDraft();
+      if (ISO.test(plan.date1 || '')) el('trackDate2').min = plan.date1;
+      updateTrackerSearchLink('trackerSearch1', plan.origin, plan.stop, plan.date1, '搜索第一程');
+      updateTrackerSearchLink('trackerSearch2', plan.stop, plan.destination, plan.date2, '搜索第二程');
+
+      const preview = el('trackerPreview');
+      const copy = preview.firstElementChild;
+      const issue = trackerFormIssue(plan);
+      if (issue) {
+        copy.textContent = issue.message;
+        preview.classList.add('warn');
+        return;
+      }
+
+      const calc = trackerCalc(plan);
+      const route = `${plan.origin} → ${plan.stop} → ${plan.destination}`;
+      if (calc.total === null) {
+        copy.innerHTML = `<strong>${escapeHTML(route)}</strong> · ${calc.segments} 段 · 票价可稍后补齐`;
+      } else {
+        copy.innerHTML = `<strong>${escapeHTML(route)}</strong> · 票价 ${formatMoney(calc.airfare)} · 全成本 ${formatMoney(calc.total)} · <strong>${formatMoney(calc.effectivePerSegment)} / 段</strong>`;
+      }
+      const waitingCheck = plan.status !== 'candidate' && !plan.eligible;
+      if (waitingCheck) copy.append(' · 尚未核对资格，不计入进度');
+      preview.classList.toggle('warn', waitingCheck);
+    }
+
+    function defaultTrackerStop(origin, destination) {
+      return ['SEA', 'PDX', 'BOI', 'SFO'].find(code => code !== origin && code !== destination) || 'SEA';
+    }
+
+    function resetTrackerForm() {
+      trackerEditingId = null;
+      el('trackerForm').reset();
+      const origin = codeOf('legOrigin').length === 3 ? codeOf('legOrigin') : 'NYC';
+      const destination = codeOf('legDest').length === 3 ? codeOf('legDest') : 'SAN';
+      el('trackOrigin').value = origin;
+      el('trackStop').value = defaultTrackerStop(origin, destination);
+      el('trackDest').value = destination;
+      el('trackDate1').value = dateOf('date1');
+      el('trackDate2').value = dateOf('date2');
+      el('trackSegments1').value = '2';
+      el('trackSegments2').value = '2';
+      el('trackerFormTitle').textContent = '记录一套方案';
+      el('trackerSave').textContent = '保存方案';
+      el('trackerCancel').hidden = true;
+      updateTrackerForm();
+    }
+
+    function prefillTracker(origin, stop, destination) {
+      resetTrackerForm();
+      el('trackOrigin').value = normalizeCode(origin);
+      el('trackStop').value = normalizeCode(stop);
+      el('trackDest').value = normalizeCode(destination);
+      el('trackDate1').value = dateOf('date1');
+      el('trackDate2').value = dateOf('date2');
+      updateTrackerForm();
+    }
+
+    function populateTrackerForm(plan) {
+      trackerEditingId = plan.id;
+      el('trackOrigin').value = plan.origin;
+      el('trackStop').value = plan.stop;
+      el('trackDest').value = plan.destination;
+      el('trackDate1').value = plan.date1;
+      el('trackDate2').value = plan.date2;
+      el('trackPrice1').value = plan.price1 ?? '';
+      el('trackPrice2').value = plan.price2 ?? '';
+      el('trackSegments1').value = String(plan.segments1);
+      el('trackSegments2').value = String(plan.segments2);
+      el('trackExtras').value = plan.extras || '';
+      el('trackStatus').value = plan.status;
+      el('trackEligible').checked = plan.eligible;
+      el('trackNote').value = plan.note;
+      el('trackerFormTitle').textContent = `编辑 ${plan.origin} → ${plan.stop} → ${plan.destination}`;
+      el('trackerSave').textContent = '更新方案';
+      el('trackerCancel').hidden = false;
+      updateTrackerForm();
+    }
+
+    function saveTrackerFromForm() {
+      const draft = trackerDraft();
+      const issue = trackerFormIssue(draft);
+      if (issue) {
+        updateTrackerForm();
+        el(issue.id).focus();
+        showToast(issue.message);
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const old = trackerEditingId ? trackerPlans.find(plan => plan.id === trackerEditingId) : null;
+      const plan = normalizeTrackerPlan({
+        ...draft,
+        id: old ? old.id : trackerId(),
+        createdAt: old ? old.createdAt : now,
+        updatedAt: now
+      });
+      if (!plan) { showToast('这条方案无法保存，请检查路线'); return; }
+
+      if (old) trackerPlans = trackerPlans.map(item => item.id === old.id ? plan : item);
+      else trackerPlans.unshift(plan);
+      saveTrackerPlans();
+      resetTrackerForm();
+      renderTracker();
+      refreshSeen();
+      showToast(old ? '方案已更新' : '方案已保存');
+    }
+
+    function renderTrackerSummary() {
+      const calculations = trackerPlans.map(plan => ({ plan, calc: trackerCalc(plan) }));
+      const locked = calculations.filter(({ plan }) => plan.eligible && plan.status !== 'candidate');
+      const flown = calculations.filter(({ plan }) => plan.eligible && plan.status === 'flown');
+      const lockedSegments = locked.reduce((sum, item) => sum + item.calc.segments, 0);
+      const flownSegments = flown.reduce((sum, item) => sum + item.calc.segments, 0);
+      const complete = calculations.filter(item => item.calc.effectivePerSegment !== null);
+      const cheapest = complete.length ? Math.min(...complete.map(item => item.calc.effectivePerSegment)) : null;
+      const lockedCost = calculations
+        .filter(({ plan, calc }) => plan.status !== 'candidate' && calc.total !== null)
+        .reduce((sum, item) => sum + item.calc.total, 0);
+      const percent = Math.min(100, lockedSegments / TRACKER_GOAL * 100);
+
+      el('trackerSummary').innerHTML = `
+        <div class="tracker-metric"><span class="value">${trackerPlans.length}</span><span class="label">已存方案</span></div>
+        <div class="tracker-metric"><span class="value">${lockedSegments} / ${TRACKER_GOAL}</span><span class="label">合资格已锁定航段</span></div>
+        <div class="tracker-metric"><span class="value">${flownSegments}</span><span class="label">合资格已飞航段</span></div>
+        <div class="tracker-metric"><span class="value">${formatMoney(cheapest)}</span><span class="label">最低全成本 / 段</span></div>
+        <div class="tracker-metric tracker-wide-mobile"><span class="value">${formatMoney(lockedCost)}</span><span class="label">已填的已购 / 已飞成本</span></div>
+        <div class="tracker-metric tracker-progress-card">
+          <div class="tracker-progress-head"><span>Gold 目标进度</span><b>${lockedSegments} / ${TRACKER_GOAL} 段${lockedSegments >= TRACKER_GOAL ? ' · 已达标' : ''}</b></div>
+          <div class="tracker-progress" role="progressbar" aria-label="Gold 目标进度" aria-valuemin="0" aria-valuemax="${TRACKER_GOAL}" aria-valuenow="${Math.min(lockedSegments, TRACKER_GOAL)}"><span style="width:${percent}%"></span></div>
+        </div>`;
+    }
+
+    function renderTracker() {
+      renderTrackerSummary();
+      const count = el('trackerTabCount');
+      count.textContent = String(trackerPlans.length);
+      count.hidden = trackerPlans.length === 0;
+      el('trackerExport').disabled = trackerPlans.length === 0;
+
+      const filter = el('trackerFilter').value;
+      const sort = el('trackerSort').value;
+      const rows = trackerPlans
+        .filter(plan => filter === 'all' || plan.status === filter)
+        .map(plan => ({ plan, calc: trackerCalc(plan) }));
+      const metric = item => {
+        if (sort === 'fare') return item.calc.farePerSegment ?? Infinity;
+        if (sort === 'total') return item.calc.total ?? Infinity;
+        return item.calc.effectivePerSegment ?? Infinity;
+      };
+      const statusOrder = { candidate: 0, booked: 1, flown: 2 };
+      rows.sort((a, b) => {
+        if (sort === 'newest') return (Date.parse(b.plan.updatedAt) || 0) - (Date.parse(a.plan.updatedAt) || 0);
+        if (sort === 'status') {
+          const diff = statusOrder[a.plan.status] - statusOrder[b.plan.status];
+          if (diff) return diff;
+        } else {
+          const diff = metric(a) - metric(b);
+          if (diff) return diff;
+        }
+        return (Date.parse(b.plan.updatedAt) || 0) - (Date.parse(a.plan.updatedAt) || 0);
+      });
+
+      const finiteCosts = rows.map(item => item.calc.effectivePerSegment).filter(Number.isFinite);
+      const best = finiteCosts.length ? Math.min(...finiteCosts) : null;
+      el('trackerRows').innerHTML = rows.map(({ plan, calc }) => {
+        const p1 = plan.price1 === null ? '待填' : formatMoney(plan.price1);
+        const p2 = plan.price2 === null ? '待填' : formatMoney(plan.price2);
+        const extra = calc.extras ? `<span class="tracker-sub">另计 ${formatMoney(calc.extras)}</span>` : '';
+        const costClass = best !== null && calc.effectivePerSegment === best ? ' tracker-best' : '';
+        const cost = calc.total === null
+          ? '<span class="tracker-sub">补齐两张票价后计算</span>'
+          : `<span class="tracker-number${costClass}">${formatMoney(calc.effectivePerSegment)} 全成本 / 段</span><span class="tracker-sub">${formatMoney(calc.farePerSegment)} 纯票价 / 段</span>`;
+        const verifyCopy = plan.eligible
+          ? (plan.status === 'candidate' ? '资格已核对，购票后计入' : '✓ 已计入资格进度')
+          : (plan.status === 'candidate' ? '资格待核对' : '未核对，不计入进度');
+        const verifyClass = plan.eligible ? 'tracker-verified' : 'tracker-unverified';
+        const id = escapeHTML(plan.id);
+        const firstKey = `cash:${plan.origin}>${plan.stop}@${plan.date1}`;
+        const secondKey = `cash:${plan.stop}>${plan.destination}@${plan.date2}`;
+        return `<tr>
+          <td><span class="tracker-route">${plan.origin} → ${plan.stop} → ${plan.destination}</span><span class="tracker-sub">${plan.date1} · ${plan.date2}</span></td>
+          <td class="tracker-number">${p1} + ${p2}${calc.airfare === null ? '' : `<span class="tracker-sub">票价合计 ${formatMoney(calc.airfare)}${calc.extras ? ` · 全成本 ${formatMoney(calc.total)}` : ''}</span>`}${extra}</td>
+          <td class="tracker-number">${plan.segments1} + ${plan.segments2} = ${calc.segments}</td>
+          <td>${cost}</td>
+          <td><span class="tracker-status ${plan.status}">${TRACKER_STATUS[plan.status]}</span><span class="${verifyClass}">${verifyCopy}</span></td>
+          <td class="tracker-note">${plan.note ? escapeHTML(plan.note) : '<span class="tracker-sub">—</span>'}</td>
+          <td><div class="tracker-actions">
+            <a class="pill" href="${escapeHTML(cashUrl(plan.origin, plan.stop, plan.date1))}" target="_blank" rel="noopener noreferrer" data-seen-key="${escapeHTML(firstKey)}">搜 1</a>
+            <a class="pill" href="${escapeHTML(cashUrl(plan.stop, plan.destination, plan.date2))}" target="_blank" rel="noopener noreferrer" data-seen-key="${escapeHTML(secondKey)}">搜 2</a>
+            <button class="pill link-ish" data-track-edit="${id}" type="button">编辑</button>
+            <button class="pill link-ish" data-track-delete="${id}" type="button">删除</button>
+          </div></td>
+        </tr>`;
+      }).join('');
+
+      const empty = el('trackerEmpty');
+      empty.hidden = rows.length !== 0;
+      empty.textContent = trackerPlans.length
+        ? '当前筛选条件下没有方案。'
+        : '还没有方案。可以从「两程凑 4 段」点“＋ 记录”，也可以直接在上面填写。';
+      el('trackerListCount').textContent = `显示 ${rows.length} / ${trackerPlans.length} 套方案`;
+      updateTrackerForm();
+    }
+
+    function csvCell(value) {
+      let text = String(value ?? '');
+      if (/^[=+\-@]/.test(text.trimStart())) text = `'${text}`;
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+
+    function exportTrackerCSV() {
+      if (!trackerPlans.length) { showToast('还没有可导出的方案'); return; }
+      const header = ['路线', '起点', '停留城市', '终点', '第一程日期', '第一张票价USD', '第一张航段', '第二程日期', '第二张票价USD', '第二张航段', '额外成本USD', '票价合计USD', '全成本USD', '总航段', '纯票价每段USD', '全成本每段USD', '状态', '资格已核对', '备注', '最后更新'];
+      const lines = [header, ...trackerPlans.map(plan => {
+        const calc = trackerCalc(plan);
+        return [
+          `${plan.origin}-${plan.stop}-${plan.destination}`, plan.origin, plan.stop, plan.destination,
+          plan.date1, plan.price1 ?? '', plan.segments1, plan.date2, plan.price2 ?? '', plan.segments2,
+          calc.extras, calc.airfare ?? '', calc.total ?? '', calc.segments,
+          calc.farePerSegment === null ? '' : calc.farePerSegment.toFixed(2),
+          calc.effectivePerSegment === null ? '' : calc.effectivePerSegment.toFixed(2),
+          TRACKER_STATUS[plan.status], plan.eligible ? '是' : '否', plan.note, plan.updatedAt
+        ];
+      })].map(row => row.map(csvCell).join(','));
+      const blob = new Blob([`\uFEFF${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `atmos-price-tracker-${todayISO()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      showToast(`已导出 ${trackerPlans.length} 套方案`);
+    }
+
+    function renderMatrix() {
+      const table = el('matrix');
+      const date = dateOf('date1');
+      const caption = table.querySelector('caption');
+      table.innerHTML = '';
+      if (caption) table.appendChild(caption);
+
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      headRow.innerHTML = `<th class="corner" scope="col">出发 &nbsp;\\&nbsp; 到达</th>`
+        + MATRIX_DESTS.map(c => `<th scope="col" title="${NAME_OF[c] || c}">${c}</th>`).join('')
+        + `<th scope="col"><span class="sr-only">整行复制</span>⧉</th>`;
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      MATRIX_ROWS.forEach(([region, origins]) => {
+        const rr = document.createElement('tr');
+        rr.className = 'region';
+        rr.innerHTML = `<th colspan="${MATRIX_DESTS.length + 2}" scope="colgroup">${region}</th>`;
+        tbody.appendChild(rr);
+        origins.forEach(origin => {
+          const tr = document.createElement('tr');
+          const th = document.createElement('th');
+          th.className = 'mx-origin';
+          th.scope = 'row';
+          th.innerHTML = `<span class="code">${origin}</span><span class="name">${NAME_OF[origin] || ''}</span>`;
+          tr.appendChild(th);
+          MATRIX_DESTS.forEach(dest => {
+            const td = document.createElement('td');
+            if (origin !== dest) td.appendChild(makeLink(origin, dest, date, 'mx-cell', '', `${origin} → ${dest} · Main · ${date}`));
+            tr.appendChild(td);
+          });
+          const tools = document.createElement('td');
+          tools.className = 'tools';
+          tools.innerHTML = `<button class="pill" data-copy-row type="button" aria-label="复制 ${origin} 这一行的链接">⧉</button>`;
+          tr.appendChild(tools);
+          tbody.appendChild(tr);
+        });
+      });
+      table.appendChild(tbody);
+    }
+
+    function renderTileBoards(data, rootId) {
+      const root = el(rootId);
+      root.innerHTML = '';
+      data.forEach(group => {
+        const date = dateOf(group.useDate || 'date1');
+        const box = document.createElement('div');
+        box.className = 'group';
+        box.innerHTML = `<div class="group-header"><div><span class="group-title">${group.title}</span><span class="group-subtitle">${group.note}</span></div><button class="pill link-ish" data-copy-group type="button">复制</button></div>`;
+        const row = document.createElement('div');
+        row.className = 'row';
+        const pairs = group.pairs ? group.pairs
+          : group.dests ? group.dests.map(x => [group.origin, x])
+          : group.origins.map(x => [x, group.dest]);
+        pairs.forEach(([o, d]) => row.appendChild(makeLink(o, d, date, 'route-link',
+          `<span class="code">${o} → ${d}${MARK}</span><span class="meta">${shortDate(date)}</span>`, `${o} → ${d} · Main · ${date}`)));
+        box.appendChild(row);
+        root.appendChild(box);
+      });
+    }
+
+    /* ═══ 里程票渲染 ═══ */
+
+    // 离美：出发地 = 美国城市；回美：反过来
+    function awardLeg(overseas, usCity) { return direction === 'out' ? [usCity, overseas] : [overseas, usCity]; }
+
+    function updateAwardCustom() {
+      const o = codeOf('awOrigin'), d = codeOf('awDest');
+      el('awOrigin').value = o;
+      el('awDest').value = d;
+      setGoState('awGo', 'awHint', o, d, () => awardUrl(o, d, dateOf('awMonth')), 'HKG');
+      renderAwardStrip();
+    }
+
+    function renderAwardStrip() {
+      const root = el('awStrip');
+      root.innerHTML = '';
+      const o = codeOf('awOrigin'), d = codeOf('awDest');
+      if (o.length !== 3 || d.length !== 3 || o === d) return;
+      const base = dateOf('awMonth'), today = todayISO();
+      [-1, 0, 1].forEach(offset => {
+        const date = addMonths(base, offset);
+        if (offset < 0 && date.slice(0, 7) < today.slice(0, 7)) return;
+        root.appendChild(makeLink(o, d, date, 'date-link' + (offset === 0 ? ' center' : ''),
+          `<span class="w">${offset === 0 ? '本月' : (offset < 0 ? '上个月' : '下个月')}</span><span class="d">${monthLabel(date)}${MARK}</span>`,
+          `${o} → ${d} · ${monthLabel(date)}`));
+      });
+    }
+
+    function renderAwardMonths() {
+      const box = el('awPresets');
+      box.querySelectorAll('.pill').forEach(b => b.remove());
+      const current = monthLabel(dateOf('awMonth'));
+      AWARD_MONTHS.forEach(p => {
+        if (p.value.slice(0, 7) < todayISO().slice(0, 7)) return;  // 整月已过就不再列出
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pill';
+        b.dataset.month = p.value;
+        b.setAttribute('aria-pressed', String(p.value.slice(0, 7) === current));
+        b.textContent = p.label;
+        box.appendChild(b);
+      });
+    }
+
+    function renderAwardBoards(key, rootId) {
+      const root = el(rootId);
+      root.innerHTML = '';
+      const date = dateOf('awMonth');
+
+      AWARD_BOARDS[key].forEach(section => {
+        const head = document.createElement('div');
+        head.innerHTML = `<p class="section-heading">${section.heading}</p><p class="section-note">${section.note}</p>`;
+        root.appendChild(head);
+
+        section.destinations.forEach(dest => {
+          const box = document.createElement('div');
+          box.className = 'group';
+          const badge = dest.partner
+            ? `<span class="partner-badge">${dest.partner}</span>`
+            : `<span class="partner-badge via">${dest.via}</span>`;
+          const title = direction === 'out' ? `飞往 ${dest.name}（${dest.code}）` : `从 ${dest.name}（${dest.code}）出发`;
+          const sub = dest.subtitle ? `<span class="group-subtitle${dest.warn ? ' warn' : ''}">${dest.subtitle}</span>` : '';
+          box.innerHTML = `<div class="group-header"><div><span class="group-title">${title}</span>${badge}${sub}</div><button class="pill link-ish" data-copy-group type="button">复制这组</button></div>`;
+
+          dest.regions.forEach(region => {
+            const label = document.createElement('p');
+            label.className = 'region-label';
+            label.textContent = region.label;
+            box.appendChild(label);
+            const row = document.createElement('div');
+            row.className = 'row';
+            region.cities.forEach(city => {
+              const [o, d] = awardLeg(dest.code, city);
+              row.appendChild(makeLink(o, d, date, 'route-link',
+                `<span class="code">${o} → ${d}${MARK}</span><span class="meta">${monthLabel(date)}</span>`,
+                `${o} → ${d} · ${monthLabel(date)}`));
+            });
+            box.appendChild(row);
+          });
+          root.appendChild(box);
+        });
+      });
+    }
+
+    function renderTips() {
+      const root = el('tipsList');
+      root.innerHTML = '';
+      AWARD_TIPS.forEach(tip => {
+        const box = document.createElement('div');
+        box.className = 'tip' + (tip.warn ? ' warn' : '');
+        box.innerHTML = `<span class="tip-label">${tip.title}</span>${tip.body}`;
+        if (tip.map) {
+          const map = document.createElement('div');
+          map.className = 'partner-map';
+          PARTNER_MAP.forEach(([code, partner]) => {
+            const row = document.createElement('div');
+            row.innerHTML = `<span class="pm-code">${code}</span><span class="pm-name">${partner}</span>`;
+            map.appendChild(row);
+          });
+          box.appendChild(map);
+        }
+        root.appendChild(box);
+      });
+    }
+
+    /* ═══ 编排 ═══ */
+
+    function renderAll(source) {
+      if (mode === 'cash') {
+        normalizeDates(source);
+        el('cashModeNote').textContent = el('searchMode').value === 'flexible'
+          ? '每个链接会打开 Alaska 的整月日历，直接按 Main 价格显示。'
+          : '每个链接会直接打开当天的航班结果，适合日期定了之后核对中转。';
+        updateCustom();
+        renderStopBoards();
+        renderTracker();
+        renderMatrix();
+        renderTileBoards(WEST_RUNS, 'westBoards');
+        renderTileBoards(HAWAII_RUNS, 'hawaiiBoards');
+      } else {
+        const m = safeDate(el('awMonth').value);
+        if (m < todayISO()) el('awMonth').value = monthStart(m);
+        el('awModeNote').textContent = direction === 'out'
+          ? '当前方向：离美。所有预设卡片搜的是美国 → 海外。'
+          : '当前方向：回美。所有预设卡片搜的是海外 → 美国。';
+        renderAwardMonths();
+        updateAwardCustom();
+        renderAwardBoards('asia', 'asiaBoards');
+        renderAwardBoards('europe', 'europeBoards');
+      }
+      renderRecents();
+      refreshSeen();
+      save();
+    }
+
+    function setMode(next) {
+      mode = next;
+      el('mode-cash').hidden = next !== 'cash';
+      el('mode-award').hidden = next !== 'award';
+      el('statsCash').hidden = next !== 'cash';
+      el('statsAward').hidden = next !== 'award';
+      document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === next)));
+      el('lede').textContent = next === 'cash'
+        ? '现金票 · 单程 · Main Cabin。固定参数横向打开路线，专门用来找便宜的 qualifying segments。'
+        : 'Atmos 伙伴奖励票 · 单程 · 整月日历。美国 ↔ 中国 / 欧洲，先挑方向和月份再一路点开。';
+      renderAll('mode');
+    }
+
+    function applyTheme(value) {
+      if (value === 'light' || value === 'dark') document.documentElement.dataset.theme = value;
+      else delete document.documentElement.dataset.theme;
+      document.querySelectorAll('[data-theme-set]').forEach(b =>
+        b.setAttribute('aria-pressed', String(b.dataset.themeSet === (value || 'auto'))));
+    }
+
+    /* ---------- 反馈 ---------- */
+
+    let toastTimer;
+    function showToast(message) {
+      const t = el('toast');
+      t.textContent = message;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1900);
+    }
+    async function copyText(text, message) {
+      try { await navigator.clipboard.writeText(text); showToast(message); }
+      catch (_) { window.prompt('浏览器拦下了自动复制，请手动复制：', text); }
+    }
+    function copyLinksIn(container) {
+      const links = [...container.querySelectorAll('a[href][data-seen-key]')];
+      if (!links.length) { showToast('这里还没有可复制的链接'); return; }
+      copyText(links.map(a => a.href).join('\n'), `已复制 ${links.length} 条链接`);
+    }
+
+    /* ---------- tabs ---------- */
+
+    function wireTabs(tablist) {
+      const tabs = [...tablist.querySelectorAll('.tab')];
+      const ownsDate2 = !!tablist.closest('#mode-cash');
+      function activate(tab) {
+        tabs.forEach(t => {
+          const on = t === tab;
+          t.classList.toggle('active', on);
+          t.setAttribute('aria-selected', String(on));
+          t.tabIndex = on ? 0 : -1;
+          el(`panel-${t.dataset.tab}`).hidden = !on;
+        });
+        if (ownsDate2) el('group-date2').hidden = tab.dataset.date2 !== 'yes';
+        refreshSeen();
+        save();
+      }
+      tabs.forEach(tab => tab.addEventListener('click', () => activate(tab)));
+      tablist.addEventListener('keydown', e => {
+        const i = tabs.indexOf(document.activeElement);
+        if (i < 0) return;
+        let next = null;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = tabs[(i + 1) % tabs.length];
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = tabs[(i - 1 + tabs.length) % tabs.length];
+        else if (e.key === 'Home') next = tabs[0];
+        else if (e.key === 'End') next = tabs[tabs.length - 1];
+        if (!next) return;
+        e.preventDefault();
+        activate(next);
+        next.focus();
+      });
+      return activate;
+    }
+
+    const activateCashTab = wireTabs(el('mode-cash').querySelector('[role="tablist"]'));
+    const activateAwardTab = wireTabs(el('mode-award').querySelector('[role="tablist"]'));
+
+    /* ---------- 矩阵：行列十字高亮 ---------- */
+
+    (function wireMatrixHighlight() {
+      const table = el('matrix');
+      const clear = () => table.querySelectorAll('.col-hl').forEach(n => n.classList.remove('col-hl'));
+      table.addEventListener('mouseover', e => {
+        const td = e.target.closest('td');
+        const tr = td && td.closest('tr');
+        if (!td || !tr) { clear(); return; }
+        const idx = [...tr.children].indexOf(td);
+        clear();
+        table.querySelectorAll('tbody tr:not(.region)').forEach(row => {
+          const cell = row.children[idx];
+          if (cell) cell.classList.add('col-hl');
+        });
+        const head = table.querySelector('thead tr');
+        if (head && head.children[idx]) head.children[idx].classList.add('col-hl');
+      });
+      table.addEventListener('mouseleave', clear);
+    })();
+
+    /* ---------- 事件 ---------- */
+
+    ['date1', 'date2', 'pax', 'searchMode'].forEach(id => el(id).addEventListener('change', () => renderAll(id)));
+    ['awMonth', 'awCabin', 'awPax'].forEach(id => el(id).addEventListener('change', () => renderAll(id)));
+
+    function wireCode(id, onChange, goId) {
+      const input = el(id);
+      input.addEventListener('change', onChange);
+      input.addEventListener('input', e => {
+        const pos = e.target.selectionStart;
+        const upper = e.target.value.toUpperCase();
+        if (upper !== e.target.value) {
+          e.target.value = upper;
+          e.target.setSelectionRange(pos, pos); // 光标留在原处
+        }
+        // 输入、删除或从 datalist 选中机场时立即刷新，避免链接仍指向旧机场。
+        onChange();
+      });
+      // keyup 发生在 datalist 完成 Enter 选定之后，此时读到的一定是新机场。
+      input.addEventListener('keyup', e => {
+        if (e.key !== 'Enter') return;
+        onChange();
+        if (!goId) return;
+        const go = el(goId);
+        if (go.hasAttribute('href')) go.click();
+        else showToast('先把两个机场代码填完整');
+      });
+    }
+
+    wireCode('origin', () => { updateCustom(); refreshSeen(); save(); }, 'customGo');
+    wireCode('destination', () => { updateCustom(); refreshSeen(); save(); }, 'customGo');
+    wireCode('legOrigin', () => { renderStopBoards(); refreshSeen(); save(); });
+    wireCode('legDest', () => { renderStopBoards(); refreshSeen(); save(); });
+    wireCode('trackOrigin', updateTrackerForm);
+    wireCode('trackStop', updateTrackerForm);
+    wireCode('trackDest', updateTrackerForm);
+    wireCode('awOrigin', () => { updateAwardCustom(); refreshSeen(); save(); }, 'awGo');
+    wireCode('awDest', () => { updateAwardCustom(); refreshSeen(); save(); }, 'awGo');
+
+    ['trackDate1', 'trackDate2', 'trackPrice1', 'trackPrice2', 'trackSegments1', 'trackSegments2', 'trackExtras', 'trackStatus', 'trackEligible', 'trackNote']
+      .forEach(id => {
+        el(id).addEventListener('input', updateTrackerForm);
+        el(id).addEventListener('change', updateTrackerForm);
+      });
+    el('trackerForm').addEventListener('submit', e => {
+      e.preventDefault();
+      // 在机场 datalist 里按 Enter 只确认机场，不应顺手把尚未填写完的方案保存。
+      if (document.activeElement && document.activeElement.matches('#trackerForm input.code')) {
+        updateTrackerForm();
+        return;
+      }
+      saveTrackerFromForm();
+    });
+    el('trackerCancel').addEventListener('click', () => { resetTrackerForm(); showToast('已取消编辑'); });
+    el('trackerExport').addEventListener('click', exportTrackerCSV);
+    ['trackerFilter', 'trackerSort'].forEach(id => el(id).addEventListener('change', () => { renderTracker(); refreshSeen(); save(); }));
+
+    document.addEventListener('click', e => {
+      const go = e.target.closest('#customGo[href], #awGo[href]');
+      if (go) {
+        if (go.id === 'awGo') pushRecent(codeOf('awOrigin'), codeOf('awDest'));
+        else pushRecent(codeOf('origin'), codeOf('destination'));
+      }
+
+      const link = e.target.closest('a[data-seen-key][href]');
+      if (link) { seen.add(link.dataset.seenKey); saveSeen(); refreshSeen(); return; }
+
+      const theme = e.target.closest('[data-theme-set]');
+      if (theme) { applyTheme(theme.dataset.themeSet); save(); return; }
+
+      const ms = e.target.closest('[data-mode]');
+      if (ms) { setMode(ms.dataset.mode); return; }
+
+      const dir = e.target.closest('[data-dir]');
+      if (dir) {
+        direction = dir.dataset.dir;
+        document.querySelectorAll('[data-dir]').forEach(b => b.setAttribute('aria-pressed', String(b === dir)));
+        renderAll('direction');
+        return;
+      }
+
+      const month = e.target.closest('[data-month]');
+      if (month) { el('awMonth').value = month.dataset.month; renderAll('awMonth'); return; }
+
+      const swap = e.target.closest('[data-swap]');
+      if (swap) {
+        const [a, b] = swap.dataset.swap.split(',');
+        const tmp = el(a).value;
+        el(a).value = el(b).value;
+        el(b).value = tmp;
+        if (a === 'legOrigin') renderStopBoards();
+        else if (a === 'awOrigin') updateAwardCustom();
+        else updateCustom();
+        refreshSeen();
+        save();
+        return;
+      }
+
+      const recent = e.target.closest('[data-recent]');
+      if (recent) {
+        const [o, d] = recent.dataset.recent.split('>');
+        if (mode === 'award') { el('awOrigin').value = o; el('awDest').value = d; updateAwardCustom(); }
+        else { el('origin').value = o; el('destination').value = d; updateCustom(); }
+        refreshSeen();
+        save();
+        return;
+      }
+
+      const copyOne = e.target.closest('[data-copy-link]');
+      if (copyOne) {
+        const target = el(copyOne.dataset.copyLink);
+        if (target.hasAttribute('href')) copyText(target.href, '已复制搜索链接');
+        else showToast('先把两个机场代码填完整');
+        return;
+      }
+
+      const preset = e.target.closest('[data-preset]');
+      if (preset) {
+        const [o, d] = preset.dataset.preset.split(',');
+        el('legOrigin').value = o;
+        el('legDest').value = d;
+        renderStopBoards();
+        refreshSeen();
+        save();
+        return;
+      }
+
+      const trackStop = e.target.closest('[data-track-stop]');
+      if (trackStop) {
+        if (trackerEditingId && !window.confirm('当前正在编辑一条方案。要放弃未保存的修改并带入新路线吗？')) return;
+        const origin = codeOf('legOrigin');
+        const destination = codeOf('legDest');
+        prefillTracker(origin, trackStop.dataset.trackStop, destination);
+        activateCashTab(el('tab-tracker'));
+        el('trackerForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => el('trackPrice1').focus(), 220);
+        showToast(`已带入 ${origin} → ${trackStop.dataset.trackStop} → ${destination}`);
+        return;
+      }
+
+      const trackEdit = e.target.closest('[data-track-edit]');
+      if (trackEdit) {
+        const plan = trackerPlans.find(item => item.id === trackEdit.dataset.trackEdit);
+        if (!plan) return;
+        populateTrackerForm(plan);
+        activateCashTab(el('tab-tracker'));
+        el('trackerForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => el('trackPrice1').focus(), 220);
+        return;
+      }
+
+      const trackDelete = e.target.closest('[data-track-delete]');
+      if (trackDelete) {
+        const plan = trackerPlans.find(item => item.id === trackDelete.dataset.trackDelete);
+        if (!plan || !window.confirm(`删除 ${plan.origin} → ${plan.stop} → ${plan.destination} 这套方案？`)) return;
+        trackerPlans = trackerPlans.filter(item => item.id !== plan.id);
+        if (trackerEditingId === plan.id) resetTrackerForm();
+        saveTrackerPlans();
+        renderTracker();
+        refreshSeen();
+        showToast('方案已删除');
+        return;
+      }
+
+      if (e.target.closest('[data-open-next]')) { openNextUnseen(); return; }
+
+      if (e.target.closest('[data-clear-seen]')) {
+        seen.clear();
+        saveSeen();
+        refreshSeen();
+        showToast('已清除全部标记');
+        return;
+      }
+
+      const rowBtn = e.target.closest('[data-copy-row]');
+      if (rowBtn) { copyLinksIn(rowBtn.closest('tr')); return; }
+
+      const groupBtn = e.target.closest('[data-copy-group]');
+      if (groupBtn) { copyLinksIn(groupBtn.closest('.group')); return; }
+
+      const panelBtn = e.target.closest('[data-copy-panel]');
+      if (panelBtn) { copyLinksIn(el(panelBtn.dataset.copyPanel)); }
+    });
+
+    /* ---------- 初始化 ---------- */
+
+    (function init() {
+      AIRPORTS.forEach(([code, name]) => {
+        const option = document.createElement('option');
+        option.value = code;
+        option.label = name;
+        option.textContent = name; // Chrome 读 label，Firefox / Safari 读文本
+        el('airportList').appendChild(option);
+      });
+
+      const saved = prefs();
+      applyTheme(saved.theme || 'auto');
+      if (saved.recents && typeof saved.recents === 'object') {
+        recents = { cash: saved.recents.cash || [], award: saved.recents.award || [] };
+      }
+
+      const firstDate = addDays(todayISO(), 6);
+      el('date1').value = saved.date1 || firstDate;
+      el('date2').value = saved.date2 || addDays(firstDate, 2);
+      el('pax').value = saved.pax || '1';
+      el('searchMode').value = saved.searchMode || 'flexible';
+      el('origin').value = saved.origin || 'SAN';
+      el('destination').value = saved.destination || 'SEA';
+      el('legOrigin').value = saved.legOrigin || 'SAN';
+      el('legDest').value = saved.legDest || 'NYC';
+      normalizeDates('init');
+
+      trackerPlans = loadTrackerPlans();
+      el('trackerFilter').value = ['all', 'candidate', 'booked', 'flown'].includes(saved.trackerFilter) ? saved.trackerFilter : 'all';
+      el('trackerSort').value = ['effective', 'fare', 'total', 'newest', 'status'].includes(saved.trackerSort) ? saved.trackerSort : 'effective';
+      resetTrackerForm();
+
+      el('awMonth').value = saved.awMonth || monthStart(addMonths(todayISO(), 1));
+      el('awMonth').min = todayISO();
+      el('awCabin').value = saved.awCabin || '';
+      el('awPax').value = saved.awPax || '1';
+      el('awOrigin').value = saved.awOrigin || 'SFO';
+      el('awDest').value = saved.awDest || 'HKG';
+
+      if (saved.direction === 'in') {
+        direction = 'in';
+        document.querySelectorAll('[data-dir]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dir === 'in')));
+      }
 
       renderPresets();
-      renderSections();
-      syncPresetHighlight();
+      renderTips();
+
+      const cashTabs = [...el('mode-cash').querySelectorAll('.tab')];
+      activateCashTab(cashTabs.find(t => t.dataset.tab === saved.cashTab) || cashTabs[0]);
+      const awardTabs = [...el('mode-award').querySelectorAll('.tab')];
+      activateAwardTab(awardTabs.find(t => t.dataset.tab === saved.awardTab) || awardTabs[0]);
+
+      setMode(saved.mode === 'award' ? 'award' : 'cash');
     })();
   </script>
 </body>
