@@ -88,6 +88,7 @@
     .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     h1 { font-size: 22px; font-weight: 500; margin: 0 0 0.25rem 0; }
     .subtitle { font-size: 14px; color: var(--text-secondary); max-width: 62ch; }
+    .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
 
     .stats { display: flex; flex-wrap: wrap; gap: 6px; margin: 0.85rem 0 0; padding: 0; list-style: none; }
     .stats[hidden] { display: none; }
@@ -122,6 +123,9 @@
     .theme-row { gap: 4px; }
     .theme-row .pill { font-size: 12px; padding: 3px 10px; }
     .theme-row .pill[aria-pressed="true"] { background: var(--accent-wash); border-color: var(--text-accent); color: var(--text-accent); }
+    .language-row { gap: 4px; }
+    .language-row .pill { font-size: 12px; padding: 3px 10px; }
+    .language-row .pill[aria-pressed="true"] { background: var(--text-accent); border-color: var(--text-accent); color: var(--on-accent); }
 
     /* ---------- controls block ---------- */
 
@@ -420,6 +424,7 @@
 
     @media (max-width: 760px) {
       body { padding: 1.25rem 0.85rem 3rem; }
+      .header-actions { align-items: flex-start; }
       .stop-row { grid-template-columns: 46px minmax(0, 1fr); }
       .stop-row a.leg { grid-column: span 2; }
       .stop-row [data-track-stop] { grid-column: span 2; justify-self: stretch; }
@@ -448,10 +453,16 @@
         <h1>Atmos 搜索台</h1>
         <p class="subtitle" id="lede"></p>
       </div>
-      <div class="pill-row theme-row" role="group" aria-label="主题">
-        <button class="pill" data-theme-set="auto" aria-pressed="true" type="button">跟随系统</button>
-        <button class="pill" data-theme-set="light" aria-pressed="false" type="button">浅色</button>
-        <button class="pill" data-theme-set="dark" aria-pressed="false" type="button">深色</button>
+      <div class="header-actions">
+        <div class="pill-row language-row" role="group" aria-label="语言">
+          <button class="pill" data-lang-set="zh" aria-pressed="true" type="button">中文</button>
+          <button class="pill" data-lang-set="en" aria-pressed="false" type="button">English</button>
+        </div>
+        <div class="pill-row theme-row" role="group" aria-label="主题">
+          <button class="pill" data-theme-set="auto" aria-pressed="true" type="button">跟随系统</button>
+          <button class="pill" data-theme-set="light" aria-pressed="false" type="button">浅色</button>
+          <button class="pill" data-theme-set="dark" aria-pressed="false" type="button">深色</button>
+        </div>
       </div>
     </div>
 
@@ -853,7 +864,142 @@
     const SEEN_KEY = 'alaska-main-segment-launcher-seen-v1';
     const TRACKER_KEY = 'atmos-search-console-price-tracker-v1';
     const TRACKER_GOAL = 8;
-    const TRACKER_STATUS = { candidate: '候选', booked: '已购', flown: '已飞' };
+    const TRACKER_STATUS = {
+      candidate: { zh: '候选', en: 'Candidate' },
+      booked: { zh: '已购', en: 'Booked' },
+      flown: { zh: '已飞', en: 'Flown' }
+    };
+
+    // Static copy is translated from the Chinese source text captured at startup.
+    // Dynamic route, price and validation copy uses msg() so switching languages is immediate.
+    const STATIC_EN = {
+      'Atmos 搜索台': 'Atmos Search Console',
+      '跟随系统': 'System', '浅色': 'Light', '深色': 'Dark',
+      '段 Silver': 'segments · Silver', '段 Gold': 'segments · Gold', '段 Platinum': 'segments · Platinum',
+      '天内飞完': 'days to complete', 'Saver / 里程票不算': 'Saver / award tickets excluded',
+      '欧洲商务 · 东岸': 'Europe business · East Coast', 'JAL 商务': 'JAL business',
+      '次免费中停': 'free stopover', '避开 BA 的飞机': 'Avoid BA-operated flights',
+      '现金刷段': 'Cash segments', '里程票': 'Award travel',
+      '出发日期': 'Departure date', '第二程日期': 'Second-leg date', '人数': 'Travelers', '日期模式': 'Date mode',
+      'Flexible dates（整月日历）': 'Flexible dates (monthly calendar)', 'Exact date（指定当天）': 'Exact date (specific day)',
+      '每个链接都固定现金票、单程、Main Cabin。': 'Every link is fixed to cash, one-way, Main Cabin.',
+      '打开下一条未看': 'Open next unseen', '清除标记': 'Clear markers',
+      '自定义搜索': 'Custom search', '两程凑 4 段': 'Two tickets · 4 segments', '价格记录器': 'Price tracker',
+      '东西比价矩阵': 'East–West matrix', '西部短途刷段': 'West Coast short hops',
+      '夏威夷岛内': 'Hawaii inter-island', '购票检查': 'Booking checklist',
+      '出发': 'From', '到达': 'To', '⇄ 交换': '⇄ Swap', '搜索 Main →': 'Search Main →',
+      '复制链接': 'Copy link', '最近搜过': 'Recent', '前后对比': 'Nearby dates',
+      '两张单程票，各选 1 stop，2 + 2 = 4 段': 'Two one-way tickets, each with 1 stop: 2 + 2 = 4 segments',
+      '先定起点和终点（点交换就能反向），再从下面挑中间停留的城市。第一程用出发日期，第二程用第二程日期。': 'Choose the start and end first (Swap reverses them), then choose a city for the break between tickets. Ticket 1 uses the departure date; ticket 2 uses the second-leg date.',
+      '复制本页链接': 'Copy page links', '起点': 'Start', '终点': 'End', '常用方向': 'Quick routes',
+      'Main 票价与 qualifying segments 记录器': 'Main fares and qualifying-segment tracker',
+      '一条记录代表两张单程票。请在点进结果、选好实际中转后，按你本人承担的含税金额填写（多人同行不要填整单总额）；只有「已购 / 已飞」且亲自核对过资格的航段，才计入 8 段进度。': 'Each record represents two one-way tickets. After choosing the actual connections, enter your own tax-inclusive share (not the full group total). Only Booked / Flown segments whose eligibility you verified count toward the 8-segment goal.',
+      '导出 CSV': 'Export CSV', '记录一套方案': 'Add a plan',
+      '可以先只存路线，看到价格后再回来补齐或更新。': 'You can save the route first and add or update prices later.',
+      '停留城市': 'Break city', '最终目的地': 'Final destination', '状态': 'Status',
+      '候选': 'Candidate', '已购': 'Booked', '已飞': 'Flown', '第一程日期': 'Ticket 1 date',
+      '第一张 Main 票价（USD）': 'Ticket 1 Main fare (USD)', '第一张实际航段': 'Ticket 1 actual segments',
+      '第二张 Main 票价（USD）': 'Ticket 2 Main fare (USD)', '第二张实际航段': 'Ticket 2 actual segments',
+      '酒店 / 地面交通等（USD）': 'Hotel / ground transport (USD)', '资格核对': 'Eligibility check',
+      '已确认 Main 且每个实际航段均符合挑战资格': 'Main confirmed and every actual segment is challenge-eligible',
+      '备注': 'Notes', '填入路线和价格后，这里会算每段成本。': 'Enter a route and prices to calculate cost per segment.',
+      '搜索第一程': 'Search ticket 1', '搜索第二程': 'Search ticket 2', '取消编辑': 'Cancel edit', '保存方案': 'Save plan',
+      '显示': 'Show', '全部状态': 'All statuses', '排序': 'Sort',
+      '全成本 / 段最低': 'Lowest all-in / segment', '纯票价 / 段最低': 'Lowest airfare / segment',
+      '总成本最低': 'Lowest total cost', '最近更新': 'Recently updated',
+      '已记录的两张单程 Main 票价方案': 'Saved two-ticket Main-fare plans',
+      '路线 / 日期': 'Route / dates', '两张票价': 'Two fares', '航段': 'Segments',
+      '每段成本': 'Cost / segment', '操作': 'Actions',
+      '还没有方案。可以从「两程凑 4 段」点“＋ 记录”，也可以直接在上面填写。': 'No plans yet. Use “+ Track” in Two tickets · 4 segments, or enter one above.',
+      '东部 / 中部 → 西部比价矩阵': 'East / Central → West fare matrix',
+      '一格就是一次搜索，点过的格子变成 ✓。鼠标停在某格会把整行整列一起提亮。没有直飞的组合会给出中转行程，对凑段反而更有利。': 'Each cell is one search; opened cells become ✓. Hovering highlights its row and column. Routes without a nonstop may surface connections, which can be useful for earning segments.',
+      '东部与中部机场到西部机场的 Main Cabin 搜索矩阵': 'Main Cabin search matrix from East and Central airports to Western airports',
+      '西部短途与周末目的地': 'Western short hops and weekend destinations',
+      'Horizon / SkyWest 代飞 Alaska 的航段同样计入，短途往往是单段成本最低的选择。': 'Alaska flights operated by Horizon / SkyWest can also count; short hops often have the lowest cost per segment.',
+      '夏威夷：单价通常最低的凑段方式': 'Hawaii: often the cheapest way to add segments',
+      'Hawaiian 承运计入挑战，岛内一跳算一段。回程那一组用第二程日期，来回就是 2 段。': 'Eligible Hawaiian-operated flying can count; each inter-island hop is one segment. The return group uses the second-leg date, making 2 segments round-trip.',
+      '下单前逐条过一遍': 'Check every item before booking',
+      '选 Main，不选 Saver': 'Choose Main, not Saver', 'Saver 是 X class，本挑战明确排除。': 'Saver is X class and is explicitly excluded from this challenge.',
+      '逐段展开 Details': 'Open Details for every segment', '确认每段由 Alaska / Hawaiian 销售并承运，或 Horizon / SkyWest 代飞 Alaska。': 'Confirm every segment is marketed and operated by Alaska / Hawaiian, or operated for Alaska by Horizon / SkyWest.',
+      '不要混入 AA 等 codeshare': 'Avoid AA and other codeshares', '即便在 alaskaair.com 上能买，合作航司或 oneworld 航段仍然不算。': 'A partner or oneworld segment may still be ineligible even when sold on alaskaair.com.',
+      '填对 Atmos Rewards 号码': 'Use the correct Atmos Rewards number', '每段必须 credit 到参加挑战的同一个账户。': 'Every segment must credit to the same account enrolled in the challenge.',
+      '中转才是两段': 'A connection is what makes two segments', '直飞只算 1 段；两张单程票各选 1 stop，才是 2 + 2 = 4。': 'A nonstop is only 1 segment; each of the two one-way tickets needs 1 stop to make 2 + 2 = 4.',
+      '在 180 天窗口内飞完': 'Fly within the 180-day window', '只出票不算，航班日期必须落在注册日起的 180 天内。': 'Ticketing alone does not count; flights must be completed within 180 days of registration.',
+      '搜索月份': 'Search month', '方向': 'Direction', '离美 →': 'Leaving US →', '← 回美': '← Returning to US', '舱位': 'Cabin',
+      '最低价（不限舱位）': 'Lowest price (any cabin)', 'Main（经济舱）': 'Main (Economy)',
+      'Partner Premium（超经）': 'Partner Premium', 'Partner Business（商务舱）': 'Partner Business', 'First Class（头等舱）': 'First Class',
+      '常用月份': 'Quick months', '整月日历一次看完一个月的放位与里程价。': 'See a full month of award space and mileage prices at once.',
+      '亚洲与中国': 'Asia & China', '欧洲': 'Europe', '里程票攻略': 'Award tips',
+      '自定义里程票搜索': 'Custom award search', '预设路线之外的组合在这里搜。两端由你自己填，不受上面方向切换的影响。': 'Search any pair not covered by the presets. These two endpoints are independent of the direction toggle above.',
+      '搜索里程票 →': 'Search awards →', '同一条航线，相邻三个月的里程日历一起打开。放位常常按月成片出现，前后各看一个月很值。': 'Open three adjacent monthly award calendars for the same route. Award space often appears in clusters, so checking the month before and after is worthwhile.',
+      '亚洲门户与中国大陆': 'Asian gateways and Mainland China', '卡片右上角的标签是执飞这条线的 Atmos 伙伴。某个日期是直飞还是中转、要多少里程，都以日历里显示的为准。': 'The badge identifies the Atmos partner serving that route. The calendar is the source of truth for nonstop vs. connecting service and mileage price.',
+      '美国 ↔ 欧洲门户': 'US ↔ European gateways', '按距离定价，含一次免费中停。东岸出发落在最便宜的价格带，西岸要贵一档。': 'Distance-based pricing includes one free stopover. East Coast departures fall in the lowest band; the West Coast is one band higher.',
+      '搜之前先知道这些': 'Know these before searching',
+      '按住': 'Hold', '点击可在后台开新标签页。搜索结果是最终依据；参数、主题、已看标记与价格记录都保存在本机浏览器，重要记录可随时导出 CSV。': 'while clicking to open a background tab. Search results are final; preferences, theme, opened markers, and price records stay in this browser. Export important records to CSV.'
+    };
+
+    const PLACEHOLDER_COPY = {
+      trackPrice1: { zh: '例如 139', en: 'e.g. 139' },
+      trackPrice2: { zh: '例如 119', en: 'e.g. 119' },
+      trackNote: { zh: '例如：SEA 停一晚；第二张需选 PDX 中转', en: 'e.g. Overnight in SEA; choose a PDX connection on ticket 2' }
+    };
+
+    // Copy generated from route data rather than present in the initial DOM.
+    const DATA_EN = {
+      '西部小城': 'Smaller Western cities',
+      '几乎一定要经 SEA / PDX 连接，航段结构最干净，通常也最便宜': 'Connections through SEA / PDX are very likely, creating a clean segment structure that is often cheapest.',
+      '西部大城': 'Major Western cities',
+      '班次多、停留方便，但两程都可能冒出直飞，必须手动挑 1 stop': 'Frequent flights and easy stopovers, but nonstop options may appear on either ticket—choose 1 stop manually.',
+      '东部 / 中部热门城市': 'Popular Eastern / Central cities',
+      '西 → 东方向的停留点；先确认是 Alaska 自己的航线，别买成 AA codeshare': 'Break points when traveling West → East. Confirm Alaska-operated flights and avoid AA codeshares.',
+      '夏威夷': 'Hawaii',
+      'Hawaiian 承运计入挑战，适合把停留变成一趟度假': 'Eligible Hawaiian-operated flights can count, turning the break into a vacation.',
+      '西 → 东': 'West → East', '东 → 西': 'East → West',
+      'SAN → 芝加哥': 'SAN → Chicago', 'SAN → 夏威夷': 'SAN → Hawaii',
+      '东北': 'Northeast', '东南': 'Southeast', '中部与山区': 'Central & Mountain', '南部与德州': 'South & Texas',
+      '从 SAN 出发': 'From SAN', '周末短途先扫这些': 'Start with these short weekend routes.',
+      '从 SEA 出发': 'From SEA', '最便宜的一批短段，Horizon / SkyWest 代飞也算': 'Some of the cheapest short hops; eligible Horizon / SkyWest-operated flights can count.',
+      '从 LAX 出发': 'From LAX', '班次多，但注意别买到 partner-only 的行程': 'Frequent service, but avoid partner-only itineraries.',
+      '从 SFO 出发': 'From SFO', '可借 SEA / PDX 中转凑段': 'Connect through SEA / PDX to add segments.',
+      '南加州小机场 → SEA': 'Southern California airports → SEA', '点出发地即可': 'Choose an origin below.',
+      'SEA / PDX 放射线 → SAN': 'SEA / PDX → SAN', '回程方向单独比一次': 'Compare the return direction separately.',
+      '岛内出发：HNL': 'Inter-island from HNL', '每一跳算 1 段，票价通常是所有选项里最低的': 'Each hop is 1 segment and usually among the cheapest options.',
+      '岛内回程 → HNL': 'Inter-island returns → HNL', '用第二程日期，来回凑成 2 段': 'Uses the second-leg date; round-trip makes 2 segments.',
+      '串岛': 'Island hopping', '没有直飞时会给出经 HNL 的连接，段数反而更划算': 'When no nonstop is available, a connection via HNL may yield better segment value.',
+      '西岸飞夏威夷': 'West Coast to Hawaii', '长途也只算 1 段，适合把往返凑进窗口': 'Even a long flight is only 1 segment; useful when fitting a trip into the challenge window.',
+      '跨太平洋门户': 'Transpacific gateways',
+      '长途段才是稀缺又贵的那一截。先在这里搜美国到门户城市的这一程，锁定之后再补进中国大陆的短途接驳，常常可以做成免费中停。': 'The long-haul segment is the scarce, expensive part. Search the US–gateway leg first, then add a short connection to Mainland China, often with a free stopover.',
+      '香港': 'Hong Kong', '深圳 / 广州的门户': 'Gateway to Shenzhen / Guangzhou',
+      '东京': 'Tokyo', '同时覆盖 HND + NRT': 'Covers both HND + NRT',
+      '东京羽田': 'Tokyo Haneda', '东京成田': 'Tokyo Narita',
+      '台北': 'Taipei', '西岸直飞': 'Nonstops from the West Coast',
+      '首尔仁川': 'Seoul Incheon', '转中国内陆的选择很多': 'Many onward options into China',
+      '西岸': 'West Coast', '东部 / 中部': 'East / Central', '从美国出发': 'Departing the US',
+      '中国大陆': 'Mainland China',
+      '直接搜完整的美国到上海行程，Alaska 会自动经伙伴航司的枢纽拼接，有时也会冒出直飞。premium 舱位很少，经济舱好找得多。': 'Search the full US–Shanghai itinerary. Alaska can combine partner flights through a hub and may also surface nonstops. Premium awards are scarce; economy is much easier to find.',
+      '上海': 'Shanghai', '经 TYO / HKG / ICN': 'Via TYO / HKG / ICN',
+      '欧洲门户': 'European gateways',
+      'Iberia / Finnair / Aer Lingus 是低税费的甜点，American 自家的飞机同样没有燃油附加费。': 'Iberia / Finnair / Aer Lingus are low-fee sweet spots; American-operated flights also avoid fuel surcharges.',
+      '税费低 · 甜点': 'Low fees · sweet spot', '税费低 · 进欧洲的门户': 'Low fees · gateway to Europe',
+      '东岸出发商务舱约 45k · 有美国预清关': 'About 45k in business from the East Coast · US preclearance',
+      'AA 自家飞机 · 无燃油附加费': 'AA-operated · no fuel surcharge',
+      'BA 的飞机附加费很高，尽量挑 AA 自家的': 'BA-operated flights carry high surcharges; prefer AA-operated flights.',
+      'Condor 或 AA 自家飞机 · 无附加费': 'Condor- or AA-operated · no surcharge',
+      '26年9月 · 返美': 'Sep 2026 · Return to US', '26年12月 · 回国': 'Dec 2026 · To China',
+      '27年1月 · 返美': 'Jan 2027 · Return to US', '27年6月 · 回国': 'Jun 2027 · To China',
+      '27年9月 · 返美': 'Sep 2027 · Return to US',
+      'American（或 BA / Condor）': 'American (or BA / Condor)',
+      '标签就是执飞这条线的 Atmos 伙伴': 'The badge identifies the Atmos partner serving the route',
+      '某个日期是直飞还是中转、要多少里程，一切以日历里显示的为准，页面不做任何预判。': 'The calendar is the source of truth for nonstop vs. connecting service and mileage price; this page makes no assumptions.',
+      '免费中停：每张单程奖励票一次': 'Free stopover: once per one-way award',
+      '美国 → HKG（中停）→ PVG，或者 美国 → 门户城市（中停）→ 欧洲某城，可以只开<strong>一张</strong>奖励票而不是两张。去深圳的话，先坐 Cathay 到 HKG，再短途 / 渡轮 / 陆路过关。': 'US → HKG (stopover) → PVG, or US → a gateway (stopover) → another European city, can be booked as <strong>one</strong> award instead of two. For Shenzhen, fly Cathay to HKG, then continue by a short flight, ferry, or overland.',
+      '欧洲性价比很高，但要绕开燃油附加费': 'Europe can be excellent value—avoid fuel surcharges',
+      'Iberia（MAD）、Finnair（HEL）、Aer Lingus（DUB）从东岸出发商务舱单程大约 45k 里程加 25 美元左右税费，走 Atmos 出票可以避开 Avios 体系另加的附加费。西岸出发要贵一档。American 自家的飞机（CDG / LHR / FRA）同样没有附加费。<strong>避开 British Airways 的飞机</strong>，附加费单程可能超过 500 美元。': 'Iberia (MAD), Finnair (HEL), and Aer Lingus (DUB) business class from the East Coast can price around 45k miles plus roughly $25 in taxes. Booking through Atmos can avoid additional Avios-program surcharges. The West Coast prices one band higher. American-operated flights to CDG / LHR / FRA also avoid surcharges. <strong>Avoid British Airways-operated flights</strong>, whose one-way surcharges can exceed $500.',
+      '一张票一个伙伴，往返没有折扣': 'One partner per ticket; no round-trip discount',
+      '绝大多数奖励票只能用一个伙伴，目前 Atmos 只允许在 American、British Airways 和 Finnair 之间混合。每个方向单独定价、单独出票，所以两个单程用不同伙伴完全可以，两头都保持灵活会好找很多。': 'Most awards can use only one partner. Atmos currently permits mixing only American, British Airways, and Finnair. Each direction prices and tickets separately, so using different partners on two one-ways is fine and staying flexible at both ends helps.',
+      '亚洲的现实情况与坑': 'Asia: practical availability and pitfalls',
+      'Cathay 的 saver premium 舱位极难放，基本等于没有；JAL 商务舱（单程约 60k）才是现实里的 premium 甜点，经济舱容易得多。Cathay / JAL / Starlux / Korean 都没有燃油附加费，Hainan、BA 和 Icelandair 会加。Atmos 还会屏蔽起飞前约 72 小时内的很多伙伴奖励票，每张票收一笔小额伙伴出票费，并且会显示「幽灵」舱位（下单时报错），遇到失败就换个日期再试。': 'Cathay saver premium space is exceptionally rare; JAL business (about 60k one-way) is the more realistic premium sweet spot, while economy is much easier. Cathay / JAL / Starlux / Korean have no fuel surcharges; Hainan, BA, and Icelandair do. Atmos may hide many partner awards within roughly 72 hours of departure, charges a small partner booking fee per ticket, and sometimes shows phantom space that fails at checkout—try another date if that happens.'
+    };
 
     const AIRPORTS = [
       ['NYC','New York 全部机场'], ['JFK','New York JFK'], ['EWR','Newark'],
@@ -873,6 +1019,11 @@
       ['MAD','Madrid'], ['HEL','Helsinki'], ['DUB','Dublin'], ['CDG','Paris CDG'], ['LHR','London Heathrow'], ['FRA','Frankfurt']
     ];
     const NAME_OF = Object.fromEntries(AIRPORTS);
+    const AIRPORT_EN = {
+      NYC: 'New York · all airports', CHI: 'Chicago · all airports', HKG: 'Hong Kong',
+      TYO: 'Tokyo · all airports', HND: 'Tokyo Haneda', NRT: 'Tokyo Narita', TPE: 'Taipei',
+      ICN: 'Seoul Incheon', PVG: 'Shanghai Pudong', PEK: 'Beijing Capital', CAN: 'Guangzhou', SZX: 'Shenzhen'
+    };
 
     /* ═══ 现金刷段数据 ═══ */
 
@@ -1007,9 +1158,76 @@
 
     let mode = 'cash';
     let direction = 'out';
+    let language = 'zh';
     let recents = { cash: [], award: [] };
     let trackerPlans = [];
     let trackerEditingId = null;
+    let staticCopies = [];
+
+    function msg(zh, en) { return language === 'en' ? en : zh; }
+    function dataText(zh) { return language === 'en' ? (DATA_EN[zh] || STATIC_EN[zh] || zh) : zh; }
+    function statusText(status) {
+      const copy = TRACKER_STATUS[status];
+      return copy ? msg(copy.zh, copy.en) : status;
+    }
+    function airportName(code) {
+      const fallback = NAME_OF[code] || code;
+      return language === 'en' ? (AIRPORT_EN[code] || fallback) : fallback;
+    }
+
+    function captureStaticCopies() {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      staticCopies = [];
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        if (node.parentElement && node.parentElement.closest('script, style')) continue;
+        const key = node.nodeValue.trim();
+        if (!key || !Object.prototype.hasOwnProperty.call(STATIC_EN, key)) continue;
+        const start = node.nodeValue.indexOf(key);
+        staticCopies.push({
+          node,
+          zh: node.nodeValue,
+          en: `${node.nodeValue.slice(0, start)}${STATIC_EN[key]}${node.nodeValue.slice(start + key.length)}`
+        });
+      }
+    }
+
+    function renderAirportList() {
+      const list = el('airportList');
+      list.replaceChildren();
+      AIRPORTS.forEach(([code]) => {
+        const name = airportName(code);
+        const option = document.createElement('option');
+        option.value = code;
+        option.label = name;
+        option.textContent = name; // Chrome reads label; Firefox / Safari read text.
+        list.appendChild(option);
+      });
+    }
+
+    function applyLanguage(next, rerender = true) {
+      language = next === 'en' ? 'en' : 'zh';
+      document.documentElement.lang = language === 'en' ? 'en' : 'zh-CN';
+      document.title = msg('Atmos 搜索台', 'Atmos Search Console');
+      staticCopies.forEach(copy => {
+        if (copy.node.isConnected) copy.node.nodeValue = language === 'en' ? copy.en : copy.zh;
+      });
+      Object.entries(PLACEHOLDER_COPY).forEach(([id, copy]) => { el(id).placeholder = msg(copy.zh, copy.en); });
+      document.querySelectorAll('[data-lang-set]').forEach(button =>
+        button.setAttribute('aria-pressed', String(button.dataset.langSet === language)));
+      const ariaCopies = [
+        ['.language-row', '语言', 'Language'], ['.theme-row', '主题', 'Theme'],
+        ['.mode-row', '搜索类型', 'Search type'],
+        ['#mode-cash .tabs', '现金刷段搜索方式', 'Cash-segment search views'],
+        ['#mode-award .tabs', '里程票搜索方式', 'Award-search views']
+      ];
+      ariaCopies.forEach(([selector, zh, en]) => document.querySelector(selector).setAttribute('aria-label', msg(zh, en)));
+      renderAirportList();
+      if (!rerender) return;
+      renderPresets();
+      renderTips();
+      setMode(mode);
+    }
 
     function isoDate(date) {
       const y = date.getFullYear();
@@ -1091,12 +1309,17 @@
         if (on) hit++;
         a.classList.toggle('seen', on);
       });
-      el(mode === 'award' ? 'awSeenCount' : 'cashSeenCount').textContent = `已看过 ${hit} / ${links.length}`;
+      el(mode === 'award' ? 'awSeenCount' : 'cashSeenCount').textContent = msg(
+        `已看过 ${hit} / ${links.length}`,
+        `Opened ${hit} / ${links.length}`
+      );
 
       const panel = activePanel();
       const left = panel ? [...panel.querySelectorAll('a[href][data-seen-key]')].filter(a => !seen.has(a.dataset.seenKey)).length : 0;
       activeBlock().querySelectorAll('[data-open-next]').forEach(b => {
-        b.textContent = left ? `打开下一条未看 · 剩 ${left}` : '本页都看过了';
+        b.textContent = left
+          ? msg(`打开下一条未看 · 剩 ${left}`, `Open next unseen · ${left} left`)
+          : msg('本页都看过了', 'All opened on this page');
         b.disabled = !left;
       });
     }
@@ -1106,7 +1329,7 @@
       const panel = activePanel();
       if (!panel) return;
       const next = [...panel.querySelectorAll('a[href][data-seen-key]')].find(a => !seen.has(a.dataset.seenKey));
-      if (!next) { showToast('这个 tab 的链接都看过了'); return; }
+      if (!next) { showToast(msg('这个 tab 的链接都看过了', 'All links in this tab have been opened')); return; }
       window.open(next.href, '_blank', 'noopener');
       seen.add(next.dataset.seenKey);
       saveSeen();
@@ -1133,7 +1356,7 @@
     function save() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          mode, direction, recents,
+          mode, direction, language, recents,
           theme: document.documentElement.dataset.theme || 'auto',
           date1: el('date1').value, date2: el('date2').value,
           pax: el('pax').value, searchMode: el('searchMode').value,
@@ -1196,14 +1419,16 @@
       if (complete && !same) {
         go.href = urlFn();
         go.removeAttribute('aria-disabled');
-        const from = NAME_OF[o] ? `${o} · ${NAME_OF[o]}` : o;
-        const to = NAME_OF[d] ? `${d} · ${NAME_OF[d]}` : d;
-        hint.textContent = `当前路线：${from} → ${to}`;
+        const from = NAME_OF[o] ? `${o} · ${airportName(o)}` : o;
+        const to = NAME_OF[d] ? `${d} · ${airportName(d)}` : d;
+        hint.textContent = msg(`当前路线：${from} → ${to}`, `Current route: ${from} → ${to}`);
         hint.classList.remove('warn');
       } else {
         go.removeAttribute('href');
         go.setAttribute('aria-disabled', 'true');
-        hint.textContent = same ? '出发和到达不能是同一个机场。' : (complete ? '' : `机场代码要填满 3 个字母，例如 ${exampleCode}。`);
+        hint.textContent = same
+          ? msg('出发和到达不能是同一个机场。', 'Origin and destination must be different.')
+          : (complete ? '' : msg(`机场代码要填满 3 个字母，例如 ${exampleCode}。`, `Enter a 3-letter airport code, such as ${exampleCode}.`));
         hint.classList.toggle('warn', same);
       }
     }
@@ -1222,8 +1447,8 @@
       const flexible = el('searchMode').value === 'flexible';
       root.classList.toggle('months', flexible);
       el('stripNote').textContent = flexible
-        ? '同一条航线，相邻三个月的整月日历一起打开。切到 Exact 会变成前后 7 天。'
-        : '同一条航线，前后 7 天各开一个页面。切到 Flexible 会变成相邻月份。';
+        ? msg('同一条航线，相邻三个月的整月日历一起打开。切到 Exact 会变成前后 7 天。', 'Open three adjacent monthly calendars for the same route. Switch to Exact for a seven-day range.')
+        : msg('同一条航线，前后 7 天各开一个页面。切到 Flexible 会变成相邻月份。', 'Open one page for each of seven nearby dates. Switch to Flexible for adjacent months.');
 
       const o = codeOf('origin'), d = codeOf('destination');
       if (o.length !== 3 || d.length !== 3 || o === d) return;
@@ -1235,8 +1460,8 @@
         if (offset < 0 && (flexible ? date.slice(0, 7) < today.slice(0, 7) : date < today)) return;
         const dt = new Date(`${date}T12:00:00`);
         const inner = flexible
-          ? `<span class="w">${offset === 0 ? '本月' : (offset < 0 ? '上个月' : '下个月')}</span><span class="d">${monthLabel(date)}${MARK}</span>`
-          : `<span class="w">${dt.toLocaleDateString('zh-CN', { weekday: 'short' })}</span><span class="d">${shortDate(date)}${MARK}</span>`;
+          ? `<span class="w">${offset === 0 ? msg('本月', 'This month') : (offset < 0 ? msg('上个月', 'Previous month') : msg('下个月', 'Next month'))}</span><span class="d">${monthLabel(date)}${MARK}</span>`
+          : `<span class="w">${dt.toLocaleDateString(language === 'en' ? 'en-US' : 'zh-CN', { weekday: 'short' })}</span><span class="d">${shortDate(date)}${MARK}</span>`;
         root.appendChild(makeLink(o, d, date, 'date-link' + (offset === 0 ? ' center' : ''), inner, `${o} → ${d} · ${date}`));
       });
     }
@@ -1249,7 +1474,7 @@
         b.type = 'button';
         b.className = 'pill';
         b.dataset.preset = `${o},${d}`;
-        b.textContent = label;
+        b.textContent = dataText(label);
         row.appendChild(b);
       });
     }
@@ -1260,13 +1485,15 @@
       const o = codeOf('legOrigin'), d = codeOf('legDest');
       const d1 = dateOf('date1'), d2 = dateOf('date2');
       if (o.length !== 3 || d.length !== 3 || o === d) {
-        el('legHint').textContent = (o === d && o.length === 3) ? '起点和终点不能是同一个机场。' : '起点和终点都要填满 3 个字母。';
+        el('legHint').textContent = (o === d && o.length === 3)
+          ? msg('起点和终点不能是同一个机场。', 'Start and end airports must be different.')
+          : msg('起点和终点都要填满 3 个字母。', 'Enter 3-letter codes for both start and end.');
         el('legHint').classList.add('warn');
         return;
       }
-      const from = NAME_OF[o] ? `${o} · ${NAME_OF[o]}` : o;
-      const to = NAME_OF[d] ? `${d} · ${NAME_OF[d]}` : d;
-      el('legHint').textContent = `当前路线：${from} → ${to}`;
+      const from = NAME_OF[o] ? `${o} · ${airportName(o)}` : o;
+      const to = NAME_OF[d] ? `${d} · ${airportName(d)}` : d;
+      el('legHint').textContent = msg(`当前路线：${from} → ${to}`, `Current route: ${from} → ${to}`);
       el('legHint').classList.remove('warn');
 
       STOPOVER_GROUPS.forEach(group => {
@@ -1274,21 +1501,21 @@
         if (!codes.length) return;
         const box = document.createElement('div');
         box.className = 'group';
-        box.innerHTML = `<div class="group-header"><div><span class="group-title">${group.title}</span><span class="group-subtitle">${group.note}</span></div><button class="pill link-ish" data-copy-group type="button">复制这组</button></div>`;
+        box.innerHTML = `<div class="group-header"><div><span class="group-title">${dataText(group.title)}</span><span class="group-subtitle">${dataText(group.note)}</span></div><button class="pill link-ish" data-copy-group type="button">${msg('复制这组', 'Copy group')}</button></div>`;
         const list = document.createElement('ul');
         list.className = 'stop-list';
         codes.forEach(code => {
           const li = document.createElement('li');
           li.className = 'stop-row';
-          li.innerHTML = `<span class="stop-code">${code}</span><span class="stop-name">${NAME_OF[code] || ''}</span>`;
-          li.appendChild(makeLink(o, code, d1, 'leg', `${o} → ${code}<span class="when">${shortDate(d1)}</span>${MARK}`, `第一程 ${o} → ${code} · ${d1} · 选 1 stop`));
-          li.appendChild(makeLink(code, d, d2, 'leg', `${code} → ${d}<span class="when">${shortDate(d2)}</span>${MARK}`, `第二程 ${code} → ${d} · ${d2} · 选 1 stop`));
+          li.innerHTML = `<span class="stop-code">${code}</span><span class="stop-name">${airportName(code)}</span>`;
+          li.appendChild(makeLink(o, code, d1, 'leg', `${o} → ${code}<span class="when">${shortDate(d1)}</span>${MARK}`, msg(`第一程 ${o} → ${code} · ${d1} · 选 1 stop`, `Ticket 1 ${o} → ${code} · ${d1} · choose 1 stop`)));
+          li.appendChild(makeLink(code, d, d2, 'leg', `${code} → ${d}<span class="when">${shortDate(d2)}</span>${MARK}`, msg(`第二程 ${code} → ${d} · ${d2} · 选 1 stop`, `Ticket 2 ${code} → ${d} · ${d2} · choose 1 stop`)));
           const add = document.createElement('button');
           add.type = 'button';
           add.className = 'pill';
           add.dataset.trackStop = code;
-          add.textContent = '＋ 记录';
-          add.setAttribute('aria-label', `把 ${o} 经 ${code} 到 ${d} 加入价格记录器`);
+          add.textContent = msg('＋ 记录', '+ Track');
+          add.setAttribute('aria-label', msg(`把 ${o} 经 ${code} 到 ${d} 加入价格记录器`, `Add ${o} via ${code} to ${d} to the price tracker`));
           li.appendChild(add);
           list.appendChild(li);
         });
@@ -1378,16 +1605,16 @@
     }
 
     function trackerFormIssue(plan) {
-      if (plan.origin.length !== 3) return { id: 'trackOrigin', message: '起点要填满 3 个字母。' };
-      if (plan.stop.length !== 3) return { id: 'trackStop', message: '停留城市要填满 3 个字母。' };
-      if (plan.destination.length !== 3) return { id: 'trackDest', message: '最终目的地要填满 3 个字母。' };
-      if (plan.stop === plan.origin || plan.stop === plan.destination) return { id: 'trackStop', message: '停留城市不能和起点或终点相同。' };
-      if (!ISO.test(plan.date1 || '')) return { id: 'trackDate1', message: '请选择第一程日期。' };
-      if (!ISO.test(plan.date2 || '')) return { id: 'trackDate2', message: '请选择第二程日期。' };
-      if (plan.date2 < plan.date1) return { id: 'trackDate2', message: '第二程日期不能早于第一程。' };
+      if (plan.origin.length !== 3) return { id: 'trackOrigin', message: msg('起点要填满 3 个字母。', 'Enter a 3-letter start airport code.') };
+      if (plan.stop.length !== 3) return { id: 'trackStop', message: msg('停留城市要填满 3 个字母。', 'Enter a 3-letter break-city code.') };
+      if (plan.destination.length !== 3) return { id: 'trackDest', message: msg('最终目的地要填满 3 个字母。', 'Enter a 3-letter final-destination code.') };
+      if (plan.stop === plan.origin || plan.stop === plan.destination) return { id: 'trackStop', message: msg('停留城市不能和起点或终点相同。', 'The break city must differ from the start and final destination.') };
+      if (!ISO.test(plan.date1 || '')) return { id: 'trackDate1', message: msg('请选择第一程日期。', 'Choose the first ticket date.') };
+      if (!ISO.test(plan.date2 || '')) return { id: 'trackDate2', message: msg('请选择第二程日期。', 'Choose the second ticket date.') };
+      if (plan.date2 < plan.date1) return { id: 'trackDate2', message: msg('第二程日期不能早于第一程。', 'The second ticket cannot be earlier than the first.') };
       for (const id of ['trackPrice1', 'trackPrice2', 'trackExtras']) {
         const raw = el(id).value.trim();
-        if (raw !== '' && (!Number.isFinite(Number(raw)) || Number(raw) < 0)) return { id, message: '金额不能是负数。' };
+        if (raw !== '' && (!Number.isFinite(Number(raw)) || Number(raw) < 0)) return { id, message: msg('金额不能是负数。', 'Amounts cannot be negative.') };
       }
       return null;
     }
@@ -1423,8 +1650,8 @@
       for (const id of ['trackOrigin', 'trackStop', 'trackDest']) el(id).value = codeOf(id);
       const plan = trackerDraft();
       if (ISO.test(plan.date1 || '')) el('trackDate2').min = plan.date1;
-      updateTrackerSearchLink('trackerSearch1', plan.origin, plan.stop, plan.date1, '搜索第一程');
-      updateTrackerSearchLink('trackerSearch2', plan.stop, plan.destination, plan.date2, '搜索第二程');
+      updateTrackerSearchLink('trackerSearch1', plan.origin, plan.stop, plan.date1, msg('搜索第一程', 'Search ticket 1'));
+      updateTrackerSearchLink('trackerSearch2', plan.stop, plan.destination, plan.date2, msg('搜索第二程', 'Search ticket 2'));
 
       const preview = el('trackerPreview');
       const copy = preview.firstElementChild;
@@ -1438,12 +1665,18 @@
       const calc = trackerCalc(plan);
       const route = `${plan.origin} → ${plan.stop} → ${plan.destination}`;
       if (calc.total === null) {
-        copy.innerHTML = `<strong>${escapeHTML(route)}</strong> · ${calc.segments} 段 · 票价可稍后补齐`;
+        copy.innerHTML = msg(
+          `<strong>${escapeHTML(route)}</strong> · ${calc.segments} 段 · 票价可稍后补齐`,
+          `<strong>${escapeHTML(route)}</strong> · ${calc.segments} segments · fares can be added later`
+        );
       } else {
-        copy.innerHTML = `<strong>${escapeHTML(route)}</strong> · 票价 ${formatMoney(calc.airfare)} · 全成本 ${formatMoney(calc.total)} · <strong>${formatMoney(calc.effectivePerSegment)} / 段</strong>`;
+        copy.innerHTML = msg(
+          `<strong>${escapeHTML(route)}</strong> · 票价 ${formatMoney(calc.airfare)} · 全成本 ${formatMoney(calc.total)} · <strong>${formatMoney(calc.effectivePerSegment)} / 段</strong>`,
+          `<strong>${escapeHTML(route)}</strong> · airfare ${formatMoney(calc.airfare)} · all-in ${formatMoney(calc.total)} · <strong>${formatMoney(calc.effectivePerSegment)} / segment</strong>`
+        );
       }
       const waitingCheck = plan.status !== 'candidate' && !plan.eligible;
-      if (waitingCheck) copy.append(' · 尚未核对资格，不计入进度');
+      if (waitingCheck) copy.append(msg(' · 尚未核对资格，不计入进度', ' · eligibility not verified; excluded from progress'));
       preview.classList.toggle('warn', waitingCheck);
     }
 
@@ -1463,8 +1696,8 @@
       el('trackDate2').value = dateOf('date2');
       el('trackSegments1').value = '2';
       el('trackSegments2').value = '2';
-      el('trackerFormTitle').textContent = '记录一套方案';
-      el('trackerSave').textContent = '保存方案';
+      el('trackerFormTitle').textContent = msg('记录一套方案', 'Add a plan');
+      el('trackerSave').textContent = msg('保存方案', 'Save plan');
       el('trackerCancel').hidden = true;
       updateTrackerForm();
     }
@@ -1494,8 +1727,8 @@
       el('trackStatus').value = plan.status;
       el('trackEligible').checked = plan.eligible;
       el('trackNote').value = plan.note;
-      el('trackerFormTitle').textContent = `编辑 ${plan.origin} → ${plan.stop} → ${plan.destination}`;
-      el('trackerSave').textContent = '更新方案';
+      el('trackerFormTitle').textContent = msg(`编辑 ${plan.origin} → ${plan.stop} → ${plan.destination}`, `Edit ${plan.origin} → ${plan.stop} → ${plan.destination}`);
+      el('trackerSave').textContent = msg('更新方案', 'Update plan');
       el('trackerCancel').hidden = false;
       updateTrackerForm();
     }
@@ -1518,7 +1751,7 @@
         createdAt: old ? old.createdAt : now,
         updatedAt: now
       });
-      if (!plan) { showToast('这条方案无法保存，请检查路线'); return; }
+      if (!plan) { showToast(msg('这条方案无法保存，请检查路线', 'This plan could not be saved; check the route')); return; }
 
       if (old) trackerPlans = trackerPlans.map(item => item.id === old.id ? plan : item);
       else trackerPlans.unshift(plan);
@@ -1526,7 +1759,7 @@
       resetTrackerForm();
       renderTracker();
       refreshSeen();
-      showToast(old ? '方案已更新' : '方案已保存');
+      showToast(old ? msg('方案已更新', 'Plan updated') : msg('方案已保存', 'Plan saved'));
     }
 
     function renderTrackerSummary() {
@@ -1543,18 +1776,23 @@
       const percent = Math.min(100, lockedSegments / TRACKER_GOAL * 100);
 
       el('trackerSummary').innerHTML = `
-        <div class="tracker-metric"><span class="value">${trackerPlans.length}</span><span class="label">已存方案</span></div>
-        <div class="tracker-metric"><span class="value">${lockedSegments} / ${TRACKER_GOAL}</span><span class="label">合资格已锁定航段</span></div>
-        <div class="tracker-metric"><span class="value">${flownSegments}</span><span class="label">合资格已飞航段</span></div>
-        <div class="tracker-metric"><span class="value">${formatMoney(cheapest)}</span><span class="label">最低全成本 / 段</span></div>
-        <div class="tracker-metric tracker-wide-mobile"><span class="value">${formatMoney(lockedCost)}</span><span class="label">已填的已购 / 已飞成本</span></div>
+        <div class="tracker-metric"><span class="value">${trackerPlans.length}</span><span class="label">${msg('已存方案', 'Saved plans')}</span></div>
+        <div class="tracker-metric"><span class="value">${lockedSegments} / ${TRACKER_GOAL}</span><span class="label">${msg('合资格已锁定航段', 'Eligible locked segments')}</span></div>
+        <div class="tracker-metric"><span class="value">${flownSegments}</span><span class="label">${msg('合资格已飞航段', 'Eligible flown segments')}</span></div>
+        <div class="tracker-metric"><span class="value">${formatMoney(cheapest)}</span><span class="label">${msg('最低全成本 / 段', 'Lowest all-in / segment')}</span></div>
+        <div class="tracker-metric tracker-wide-mobile"><span class="value">${formatMoney(lockedCost)}</span><span class="label">${msg('已填的已购 / 已飞成本', 'Entered booked / flown cost')}</span></div>
         <div class="tracker-metric tracker-progress-card">
-          <div class="tracker-progress-head"><span>Gold 目标进度</span><b>${lockedSegments} / ${TRACKER_GOAL} 段${lockedSegments >= TRACKER_GOAL ? ' · 已达标' : ''}</b></div>
-          <div class="tracker-progress" role="progressbar" aria-label="Gold 目标进度" aria-valuemin="0" aria-valuemax="${TRACKER_GOAL}" aria-valuenow="${Math.min(lockedSegments, TRACKER_GOAL)}"><span style="width:${percent}%"></span></div>
+          <div class="tracker-progress-head"><span>${msg('Gold 目标进度', 'Gold goal progress')}</span><b>${lockedSegments} / ${TRACKER_GOAL} ${msg('段', 'segments')}${lockedSegments >= TRACKER_GOAL ? msg(' · 已达标', ' · goal reached') : ''}</b></div>
+          <div class="tracker-progress" role="progressbar" aria-label="${msg('Gold 目标进度', 'Gold goal progress')}" aria-valuemin="0" aria-valuemax="${TRACKER_GOAL}" aria-valuenow="${Math.min(lockedSegments, TRACKER_GOAL)}"><span style="width:${percent}%"></span></div>
         </div>`;
     }
 
     function renderTracker() {
+      const editing = trackerEditingId ? trackerPlans.find(plan => plan.id === trackerEditingId) : null;
+      el('trackerFormTitle').textContent = editing
+        ? msg(`编辑 ${editing.origin} → ${editing.stop} → ${editing.destination}`, `Edit ${editing.origin} → ${editing.stop} → ${editing.destination}`)
+        : msg('记录一套方案', 'Add a plan');
+      el('trackerSave').textContent = editing ? msg('更新方案', 'Update plan') : msg('保存方案', 'Save plan');
       renderTrackerSummary();
       const count = el('trackerTabCount');
       count.textContent = String(trackerPlans.length);
@@ -1587,32 +1825,32 @@
       const finiteCosts = rows.map(item => item.calc.effectivePerSegment).filter(Number.isFinite);
       const best = finiteCosts.length ? Math.min(...finiteCosts) : null;
       el('trackerRows').innerHTML = rows.map(({ plan, calc }) => {
-        const p1 = plan.price1 === null ? '待填' : formatMoney(plan.price1);
-        const p2 = plan.price2 === null ? '待填' : formatMoney(plan.price2);
-        const extra = calc.extras ? `<span class="tracker-sub">另计 ${formatMoney(calc.extras)}</span>` : '';
+        const p1 = plan.price1 === null ? msg('待填', 'Pending') : formatMoney(plan.price1);
+        const p2 = plan.price2 === null ? msg('待填', 'Pending') : formatMoney(plan.price2);
+        const extra = calc.extras ? `<span class="tracker-sub">${msg('另计', 'Extras')} ${formatMoney(calc.extras)}</span>` : '';
         const costClass = best !== null && calc.effectivePerSegment === best ? ' tracker-best' : '';
         const cost = calc.total === null
-          ? '<span class="tracker-sub">补齐两张票价后计算</span>'
-          : `<span class="tracker-number${costClass}">${formatMoney(calc.effectivePerSegment)} 全成本 / 段</span><span class="tracker-sub">${formatMoney(calc.farePerSegment)} 纯票价 / 段</span>`;
+          ? `<span class="tracker-sub">${msg('补齐两张票价后计算', 'Calculated after both fares are entered')}</span>`
+          : `<span class="tracker-number${costClass}">${formatMoney(calc.effectivePerSegment)} ${msg('全成本 / 段', 'all-in / segment')}</span><span class="tracker-sub">${formatMoney(calc.farePerSegment)} ${msg('纯票价 / 段', 'airfare / segment')}</span>`;
         const verifyCopy = plan.eligible
-          ? (plan.status === 'candidate' ? '资格已核对，购票后计入' : '✓ 已计入资格进度')
-          : (plan.status === 'candidate' ? '资格待核对' : '未核对，不计入进度');
+          ? (plan.status === 'candidate' ? msg('资格已核对，购票后计入', 'Eligibility verified; counts after booking') : msg('✓ 已计入资格进度', '✓ Included in eligible progress'))
+          : (plan.status === 'candidate' ? msg('资格待核对', 'Eligibility not yet verified') : msg('未核对，不计入进度', 'Not verified; excluded from progress'));
         const verifyClass = plan.eligible ? 'tracker-verified' : 'tracker-unverified';
         const id = escapeHTML(plan.id);
         const firstKey = `cash:${plan.origin}>${plan.stop}@${plan.date1}`;
         const secondKey = `cash:${plan.stop}>${plan.destination}@${plan.date2}`;
         return `<tr>
           <td><span class="tracker-route">${plan.origin} → ${plan.stop} → ${plan.destination}</span><span class="tracker-sub">${plan.date1} · ${plan.date2}</span></td>
-          <td class="tracker-number">${p1} + ${p2}${calc.airfare === null ? '' : `<span class="tracker-sub">票价合计 ${formatMoney(calc.airfare)}${calc.extras ? ` · 全成本 ${formatMoney(calc.total)}` : ''}</span>`}${extra}</td>
+          <td class="tracker-number">${p1} + ${p2}${calc.airfare === null ? '' : `<span class="tracker-sub">${msg('票价合计', 'Airfare total')} ${formatMoney(calc.airfare)}${calc.extras ? ` · ${msg('全成本', 'all-in')} ${formatMoney(calc.total)}` : ''}</span>`}${extra}</td>
           <td class="tracker-number">${plan.segments1} + ${plan.segments2} = ${calc.segments}</td>
           <td>${cost}</td>
-          <td><span class="tracker-status ${plan.status}">${TRACKER_STATUS[plan.status]}</span><span class="${verifyClass}">${verifyCopy}</span></td>
+          <td><span class="tracker-status ${plan.status}">${statusText(plan.status)}</span><span class="${verifyClass}">${verifyCopy}</span></td>
           <td class="tracker-note">${plan.note ? escapeHTML(plan.note) : '<span class="tracker-sub">—</span>'}</td>
           <td><div class="tracker-actions">
-            <a class="pill" href="${escapeHTML(cashUrl(plan.origin, plan.stop, plan.date1))}" target="_blank" rel="noopener noreferrer" data-seen-key="${escapeHTML(firstKey)}">搜 1</a>
-            <a class="pill" href="${escapeHTML(cashUrl(plan.stop, plan.destination, plan.date2))}" target="_blank" rel="noopener noreferrer" data-seen-key="${escapeHTML(secondKey)}">搜 2</a>
-            <button class="pill link-ish" data-track-edit="${id}" type="button">编辑</button>
-            <button class="pill link-ish" data-track-delete="${id}" type="button">删除</button>
+            <a class="pill" href="${escapeHTML(cashUrl(plan.origin, plan.stop, plan.date1))}" target="_blank" rel="noopener noreferrer" data-seen-key="${escapeHTML(firstKey)}">${msg('搜 1', 'Search 1')}</a>
+            <a class="pill" href="${escapeHTML(cashUrl(plan.stop, plan.destination, plan.date2))}" target="_blank" rel="noopener noreferrer" data-seen-key="${escapeHTML(secondKey)}">${msg('搜 2', 'Search 2')}</a>
+            <button class="pill link-ish" data-track-edit="${id}" type="button">${msg('编辑', 'Edit')}</button>
+            <button class="pill link-ish" data-track-delete="${id}" type="button">${msg('删除', 'Delete')}</button>
           </div></td>
         </tr>`;
       }).join('');
@@ -1620,9 +1858,9 @@
       const empty = el('trackerEmpty');
       empty.hidden = rows.length !== 0;
       empty.textContent = trackerPlans.length
-        ? '当前筛选条件下没有方案。'
-        : '还没有方案。可以从「两程凑 4 段」点“＋ 记录”，也可以直接在上面填写。';
-      el('trackerListCount').textContent = `显示 ${rows.length} / ${trackerPlans.length} 套方案`;
+        ? msg('当前筛选条件下没有方案。', 'No plans match the current filter.')
+        : msg('还没有方案。可以从「两程凑 4 段」点“＋ 记录”，也可以直接在上面填写。', 'No plans yet. Use “+ Track” in Two tickets · 4 segments, or enter one above.');
+      el('trackerListCount').textContent = msg(`显示 ${rows.length} / ${trackerPlans.length} 套方案`, `Showing ${rows.length} / ${trackerPlans.length} plans`);
       updateTrackerForm();
     }
 
@@ -1633,8 +1871,10 @@
     }
 
     function exportTrackerCSV() {
-      if (!trackerPlans.length) { showToast('还没有可导出的方案'); return; }
-      const header = ['路线', '起点', '停留城市', '终点', '第一程日期', '第一张票价USD', '第一张航段', '第二程日期', '第二张票价USD', '第二张航段', '额外成本USD', '票价合计USD', '全成本USD', '总航段', '纯票价每段USD', '全成本每段USD', '状态', '资格已核对', '备注', '最后更新'];
+      if (!trackerPlans.length) { showToast(msg('还没有可导出的方案', 'There are no plans to export')); return; }
+      const header = language === 'en'
+        ? ['Route', 'Start', 'Break city', 'Final destination', 'Ticket 1 date', 'Ticket 1 fare USD', 'Ticket 1 segments', 'Ticket 2 date', 'Ticket 2 fare USD', 'Ticket 2 segments', 'Extra cost USD', 'Airfare total USD', 'All-in total USD', 'Total segments', 'Airfare per segment USD', 'All-in per segment USD', 'Status', 'Eligibility verified', 'Notes', 'Last updated']
+        : ['路线', '起点', '停留城市', '终点', '第一程日期', '第一张票价USD', '第一张航段', '第二程日期', '第二张票价USD', '第二张航段', '额外成本USD', '票价合计USD', '全成本USD', '总航段', '纯票价每段USD', '全成本每段USD', '状态', '资格已核对', '备注', '最后更新'];
       const lines = [header, ...trackerPlans.map(plan => {
         const calc = trackerCalc(plan);
         return [
@@ -1643,7 +1883,7 @@
           calc.extras, calc.airfare ?? '', calc.total ?? '', calc.segments,
           calc.farePerSegment === null ? '' : calc.farePerSegment.toFixed(2),
           calc.effectivePerSegment === null ? '' : calc.effectivePerSegment.toFixed(2),
-          TRACKER_STATUS[plan.status], plan.eligible ? '是' : '否', plan.note, plan.updatedAt
+          statusText(plan.status), plan.eligible ? msg('是', 'Yes') : msg('否', 'No'), plan.note, plan.updatedAt
         ];
       })].map(row => row.map(csvCell).join(','));
       const blob = new Blob([`\uFEFF${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8' });
@@ -1655,7 +1895,7 @@
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 0);
-      showToast(`已导出 ${trackerPlans.length} 套方案`);
+      showToast(msg(`已导出 ${trackerPlans.length} 套方案`, `Exported ${trackerPlans.length} plans`));
     }
 
     function renderMatrix() {
@@ -1667,9 +1907,9 @@
 
       const thead = document.createElement('thead');
       const headRow = document.createElement('tr');
-      headRow.innerHTML = `<th class="corner" scope="col">出发 &nbsp;\\&nbsp; 到达</th>`
-        + MATRIX_DESTS.map(c => `<th scope="col" title="${NAME_OF[c] || c}">${c}</th>`).join('')
-        + `<th scope="col"><span class="sr-only">整行复制</span>⧉</th>`;
+      headRow.innerHTML = `<th class="corner" scope="col">${msg('出发', 'From')} &nbsp;\\&nbsp; ${msg('到达', 'To')}</th>`
+        + MATRIX_DESTS.map(c => `<th scope="col" title="${airportName(c)}">${c}</th>`).join('')
+        + `<th scope="col"><span class="sr-only">${msg('整行复制', 'Copy row')}</span>⧉</th>`;
       thead.appendChild(headRow);
       table.appendChild(thead);
 
@@ -1677,14 +1917,14 @@
       MATRIX_ROWS.forEach(([region, origins]) => {
         const rr = document.createElement('tr');
         rr.className = 'region';
-        rr.innerHTML = `<th colspan="${MATRIX_DESTS.length + 2}" scope="colgroup">${region}</th>`;
+        rr.innerHTML = `<th colspan="${MATRIX_DESTS.length + 2}" scope="colgroup">${dataText(region)}</th>`;
         tbody.appendChild(rr);
         origins.forEach(origin => {
           const tr = document.createElement('tr');
           const th = document.createElement('th');
           th.className = 'mx-origin';
           th.scope = 'row';
-          th.innerHTML = `<span class="code">${origin}</span><span class="name">${NAME_OF[origin] || ''}</span>`;
+          th.innerHTML = `<span class="code">${origin}</span><span class="name">${airportName(origin)}</span>`;
           tr.appendChild(th);
           MATRIX_DESTS.forEach(dest => {
             const td = document.createElement('td');
@@ -1693,7 +1933,7 @@
           });
           const tools = document.createElement('td');
           tools.className = 'tools';
-          tools.innerHTML = `<button class="pill" data-copy-row type="button" aria-label="复制 ${origin} 这一行的链接">⧉</button>`;
+          tools.innerHTML = `<button class="pill" data-copy-row type="button" aria-label="${msg(`复制 ${origin} 这一行的链接`, `Copy links in the ${origin} row`)}">⧉</button>`;
           tr.appendChild(tools);
           tbody.appendChild(tr);
         });
@@ -1708,7 +1948,7 @@
         const date = dateOf(group.useDate || 'date1');
         const box = document.createElement('div');
         box.className = 'group';
-        box.innerHTML = `<div class="group-header"><div><span class="group-title">${group.title}</span><span class="group-subtitle">${group.note}</span></div><button class="pill link-ish" data-copy-group type="button">复制</button></div>`;
+        box.innerHTML = `<div class="group-header"><div><span class="group-title">${dataText(group.title)}</span><span class="group-subtitle">${dataText(group.note)}</span></div><button class="pill link-ish" data-copy-group type="button">${msg('复制', 'Copy')}</button></div>`;
         const row = document.createElement('div');
         row.className = 'row';
         const pairs = group.pairs ? group.pairs
@@ -1744,7 +1984,7 @@
         const date = addMonths(base, offset);
         if (offset < 0 && date.slice(0, 7) < today.slice(0, 7)) return;
         root.appendChild(makeLink(o, d, date, 'date-link' + (offset === 0 ? ' center' : ''),
-          `<span class="w">${offset === 0 ? '本月' : (offset < 0 ? '上个月' : '下个月')}</span><span class="d">${monthLabel(date)}${MARK}</span>`,
+          `<span class="w">${offset === 0 ? msg('本月', 'This month') : (offset < 0 ? msg('上个月', 'Previous month') : msg('下个月', 'Next month'))}</span><span class="d">${monthLabel(date)}${MARK}</span>`,
           `${o} → ${d} · ${monthLabel(date)}`));
       });
     }
@@ -1760,7 +2000,7 @@
         b.className = 'pill';
         b.dataset.month = p.value;
         b.setAttribute('aria-pressed', String(p.value.slice(0, 7) === current));
-        b.textContent = p.label;
+        b.textContent = dataText(p.label);
         box.appendChild(b);
       });
     }
@@ -1772,7 +2012,7 @@
 
       AWARD_BOARDS[key].forEach(section => {
         const head = document.createElement('div');
-        head.innerHTML = `<p class="section-heading">${section.heading}</p><p class="section-note">${section.note}</p>`;
+        head.innerHTML = `<p class="section-heading">${dataText(section.heading)}</p><p class="section-note">${dataText(section.note)}</p>`;
         root.appendChild(head);
 
         section.destinations.forEach(dest => {
@@ -1780,15 +2020,18 @@
           box.className = 'group';
           const badge = dest.partner
             ? `<span class="partner-badge">${dest.partner}</span>`
-            : `<span class="partner-badge via">${dest.via}</span>`;
-          const title = direction === 'out' ? `飞往 ${dest.name}（${dest.code}）` : `从 ${dest.name}（${dest.code}）出发`;
-          const sub = dest.subtitle ? `<span class="group-subtitle${dest.warn ? ' warn' : ''}">${dest.subtitle}</span>` : '';
-          box.innerHTML = `<div class="group-header"><div><span class="group-title">${title}</span>${badge}${sub}</div><button class="pill link-ish" data-copy-group type="button">复制这组</button></div>`;
+            : `<span class="partner-badge via">${dataText(dest.via)}</span>`;
+          const destinationName = dataText(dest.name);
+          const title = direction === 'out'
+            ? msg(`飞往 ${destinationName}（${dest.code}）`, `Fly to ${destinationName} (${dest.code})`)
+            : msg(`从 ${destinationName}（${dest.code}）出发`, `Depart from ${destinationName} (${dest.code})`);
+          const sub = dest.subtitle ? `<span class="group-subtitle${dest.warn ? ' warn' : ''}">${dataText(dest.subtitle)}</span>` : '';
+          box.innerHTML = `<div class="group-header"><div><span class="group-title">${title}</span>${badge}${sub}</div><button class="pill link-ish" data-copy-group type="button">${msg('复制这组', 'Copy group')}</button></div>`;
 
           dest.regions.forEach(region => {
             const label = document.createElement('p');
             label.className = 'region-label';
-            label.textContent = region.label;
+            label.textContent = dataText(region.label);
             box.appendChild(label);
             const row = document.createElement('div');
             row.className = 'row';
@@ -1811,13 +2054,13 @@
       AWARD_TIPS.forEach(tip => {
         const box = document.createElement('div');
         box.className = 'tip' + (tip.warn ? ' warn' : '');
-        box.innerHTML = `<span class="tip-label">${tip.title}</span>${tip.body}`;
+        box.innerHTML = `<span class="tip-label">${dataText(tip.title)}</span>${dataText(tip.body)}`;
         if (tip.map) {
           const map = document.createElement('div');
           map.className = 'partner-map';
           PARTNER_MAP.forEach(([code, partner]) => {
             const row = document.createElement('div');
-            row.innerHTML = `<span class="pm-code">${code}</span><span class="pm-name">${partner}</span>`;
+            row.innerHTML = `<span class="pm-code">${code}</span><span class="pm-name">${dataText(partner)}</span>`;
             map.appendChild(row);
           });
           box.appendChild(map);
@@ -1832,8 +2075,8 @@
       if (mode === 'cash') {
         normalizeDates(source);
         el('cashModeNote').textContent = el('searchMode').value === 'flexible'
-          ? '每个链接会打开 Alaska 的整月日历，直接按 Main 价格显示。'
-          : '每个链接会直接打开当天的航班结果，适合日期定了之后核对中转。';
+          ? msg('每个链接会打开 Alaska 的整月日历，直接按 Main 价格显示。', 'Each link opens Alaska’s monthly calendar with Main fares.')
+          : msg('每个链接会直接打开当天的航班结果，适合日期定了之后核对中转。', 'Each link opens that day’s flight results, useful for confirming connections after fixing the date.');
         updateCustom();
         renderStopBoards();
         renderTracker();
@@ -1844,8 +2087,8 @@
         const m = safeDate(el('awMonth').value);
         if (m < todayISO()) el('awMonth').value = monthStart(m);
         el('awModeNote').textContent = direction === 'out'
-          ? '当前方向：离美。所有预设卡片搜的是美国 → 海外。'
-          : '当前方向：回美。所有预设卡片搜的是海外 → 美国。';
+          ? msg('当前方向：离美。所有预设卡片搜的是美国 → 海外。', 'Current direction: leaving the US. Every preset searches US → overseas.')
+          : msg('当前方向：回美。所有预设卡片搜的是海外 → 美国。', 'Current direction: returning to the US. Every preset searches overseas → US.');
         renderAwardMonths();
         updateAwardCustom();
         renderAwardBoards('asia', 'asiaBoards');
@@ -1864,8 +2107,8 @@
       el('statsAward').hidden = next !== 'award';
       document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === next)));
       el('lede').textContent = next === 'cash'
-        ? '现金票 · 单程 · Main Cabin。固定参数横向打开路线，专门用来找便宜的 qualifying segments。'
-        : 'Atmos 伙伴奖励票 · 单程 · 整月日历。美国 ↔ 中国 / 欧洲，先挑方向和月份再一路点开。';
+        ? msg('现金票 · 单程 · Main Cabin。固定参数横向打开路线，专门用来找便宜的 qualifying segments。', 'Cash · one-way · Main Cabin. Open comparable routes with fixed parameters to find cheap qualifying segments.')
+        : msg('Atmos 伙伴奖励票 · 单程 · 整月日历。美国 ↔ 中国 / 欧洲，先挑方向和月份再一路点开。', 'Atmos partner awards · one-way · monthly calendar. Choose a direction and month, then scan US ↔ China / Europe routes.');
       renderAll('mode');
     }
 
@@ -1888,12 +2131,12 @@
     }
     async function copyText(text, message) {
       try { await navigator.clipboard.writeText(text); showToast(message); }
-      catch (_) { window.prompt('浏览器拦下了自动复制，请手动复制：', text); }
+      catch (_) { window.prompt(msg('浏览器拦下了自动复制，请手动复制：', 'Automatic copying was blocked. Copy manually:'), text); }
     }
     function copyLinksIn(container) {
       const links = [...container.querySelectorAll('a[href][data-seen-key]')];
-      if (!links.length) { showToast('这里还没有可复制的链接'); return; }
-      copyText(links.map(a => a.href).join('\n'), `已复制 ${links.length} 条链接`);
+      if (!links.length) { showToast(msg('这里还没有可复制的链接', 'There are no links to copy here')); return; }
+      copyText(links.map(a => a.href).join('\n'), msg(`已复制 ${links.length} 条链接`, `Copied ${links.length} links`));
     }
 
     /* ---------- tabs ---------- */
@@ -1979,7 +2222,7 @@
         if (!goId) return;
         const go = el(goId);
         if (go.hasAttribute('href')) go.click();
-        else showToast('先把两个机场代码填完整');
+        else showToast(msg('先把两个机场代码填完整', 'Enter both 3-letter airport codes first'));
       });
     }
 
@@ -2007,7 +2250,7 @@
       }
       saveTrackerFromForm();
     });
-    el('trackerCancel').addEventListener('click', () => { resetTrackerForm(); showToast('已取消编辑'); });
+    el('trackerCancel').addEventListener('click', () => { resetTrackerForm(); showToast(msg('已取消编辑', 'Editing canceled')); });
     el('trackerExport').addEventListener('click', exportTrackerCSV);
     ['trackerFilter', 'trackerSort'].forEach(id => el(id).addEventListener('change', () => { renderTracker(); refreshSeen(); save(); }));
 
@@ -2020,6 +2263,9 @@
 
       const link = e.target.closest('a[data-seen-key][href]');
       if (link) { seen.add(link.dataset.seenKey); saveSeen(); refreshSeen(); return; }
+
+      const lang = e.target.closest('[data-lang-set]');
+      if (lang) { applyLanguage(lang.dataset.langSet); return; }
 
       const theme = e.target.closest('[data-theme-set]');
       if (theme) { applyTheme(theme.dataset.themeSet); save(); return; }
@@ -2065,8 +2311,8 @@
       const copyOne = e.target.closest('[data-copy-link]');
       if (copyOne) {
         const target = el(copyOne.dataset.copyLink);
-        if (target.hasAttribute('href')) copyText(target.href, '已复制搜索链接');
-        else showToast('先把两个机场代码填完整');
+        if (target.hasAttribute('href')) copyText(target.href, msg('已复制搜索链接', 'Search link copied'));
+        else showToast(msg('先把两个机场代码填完整', 'Enter both 3-letter airport codes first'));
         return;
       }
 
@@ -2083,14 +2329,14 @@
 
       const trackStop = e.target.closest('[data-track-stop]');
       if (trackStop) {
-        if (trackerEditingId && !window.confirm('当前正在编辑一条方案。要放弃未保存的修改并带入新路线吗？')) return;
+        if (trackerEditingId && !window.confirm(msg('当前正在编辑一条方案。要放弃未保存的修改并带入新路线吗？', 'You are editing a plan. Discard unsaved changes and load the new route?'))) return;
         const origin = codeOf('legOrigin');
         const destination = codeOf('legDest');
         prefillTracker(origin, trackStop.dataset.trackStop, destination);
         activateCashTab(el('tab-tracker'));
         el('trackerForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
         setTimeout(() => el('trackPrice1').focus(), 220);
-        showToast(`已带入 ${origin} → ${trackStop.dataset.trackStop} → ${destination}`);
+        showToast(msg(`已带入 ${origin} → ${trackStop.dataset.trackStop} → ${destination}`, `Loaded ${origin} → ${trackStop.dataset.trackStop} → ${destination}`));
         return;
       }
 
@@ -2108,13 +2354,13 @@
       const trackDelete = e.target.closest('[data-track-delete]');
       if (trackDelete) {
         const plan = trackerPlans.find(item => item.id === trackDelete.dataset.trackDelete);
-        if (!plan || !window.confirm(`删除 ${plan.origin} → ${plan.stop} → ${plan.destination} 这套方案？`)) return;
+        if (!plan || !window.confirm(msg(`删除 ${plan.origin} → ${plan.stop} → ${plan.destination} 这套方案？`, `Delete the ${plan.origin} → ${plan.stop} → ${plan.destination} plan?`))) return;
         trackerPlans = trackerPlans.filter(item => item.id !== plan.id);
         if (trackerEditingId === plan.id) resetTrackerForm();
         saveTrackerPlans();
         renderTracker();
         refreshSeen();
-        showToast('方案已删除');
+        showToast(msg('方案已删除', 'Plan deleted'));
         return;
       }
 
@@ -2124,7 +2370,7 @@
         seen.clear();
         saveSeen();
         refreshSeen();
-        showToast('已清除全部标记');
+        showToast(msg('已清除全部标记', 'All opened markers cleared'));
         return;
       }
 
@@ -2141,15 +2387,9 @@
     /* ---------- 初始化 ---------- */
 
     (function init() {
-      AIRPORTS.forEach(([code, name]) => {
-        const option = document.createElement('option');
-        option.value = code;
-        option.label = name;
-        option.textContent = name; // Chrome 读 label，Firefox / Safari 读文本
-        el('airportList').appendChild(option);
-      });
-
+      captureStaticCopies();
       const saved = prefs();
+      applyLanguage(saved.language === 'en' ? 'en' : 'zh', false);
       applyTheme(saved.theme || 'auto');
       if (saved.recents && typeof saved.recents === 'object') {
         recents = { cash: saved.recents.cash || [], award: saved.recents.award || [] };
