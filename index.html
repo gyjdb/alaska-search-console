@@ -327,6 +327,30 @@
     .tracker-empty { padding: 24px 16px; text-align: center; color: var(--text-tertiary); font-size: 13px; }
     .tracker-empty[hidden] { display: none; }
     .tracker-note { max-width: 180px; overflow-wrap: anywhere; }
+    .ticket-editor { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; margin: 12px 0; }
+    .ticket-editor .group-header { align-items: center; }
+    .flight-editor { display: grid; grid-template-columns: 28px 1fr 1fr 1.5fr 1.2fr; gap: 8px; align-items: end; padding: 12px 0; border-top: 1px solid var(--border); }
+    .flight-editor .flight-check { grid-column: 2 / 5; }
+    .flight-editor .flight-remove { grid-column: 5; }
+    .ticket-price-field { max-width: 240px; margin: 8px 0 12px; }
+    .tracker-plan-card { padding: 16px; }
+    .saved-ticket { border-top: 1px solid var(--border); padding: 12px 0 2px; margin-top: 12px; }
+    .saved-flight { display: flex; align-items: center; gap: 6px 12px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; }
+    .tracker-plan-metrics { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0; font-size: 13px; }
+    .tracker-banner { padding: 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); font-size: 13px; color: var(--text-warn); }
+    .tracker-banner[hidden] { display: none; }
+    .tracker-metric .label { white-space: normal; }
+    .tracker-goal input { width: 6em; }
+    .tracker-progress-head { flex-wrap: wrap; }
+    @media (max-width: 640px) {
+      .flight-editor { grid-template-columns: 22px 1fr 1fr; }
+      .flight-editor .flight-date { grid-column: 2; }
+      .flight-editor .flight-check { grid-column: 2 / 4; }
+      .flight-editor .flight-remove { grid-column: 2 / 4; justify-self: start; }
+      .ticket-editor { padding: 10px; }
+      .tracker-toolbar select { max-width: 100%; }
+      .tracker-plan-card .group-title { overflow-wrap: anywhere; }
+    }
 
     /* ---------- date strip ---------- */
 
@@ -516,7 +540,7 @@
       <div class="tabs" role="tablist" aria-label="现金刷段搜索方式">
         <button class="tab active" role="tab" id="tab-custom" aria-controls="panel-custom" aria-selected="true" tabindex="0" data-tab="custom" type="button">自定义搜索</button>
         <button class="tab" role="tab" id="tab-two" aria-controls="panel-two" aria-selected="false" tabindex="-1" data-tab="two" data-date2="yes" type="button">两程凑 4 段</button>
-        <button class="tab" role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" tabindex="-1" data-tab="tracker" data-date2="yes" type="button">价格记录器<span class="tab-count" id="trackerTabCount" hidden></span></button>
+        <button class="tab" role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" tabindex="-1" data-tab="tracker" type="button">价格记录器<span class="tab-count" id="trackerTabCount" hidden></span></button>
         <button class="tab" role="tab" id="tab-matrix" aria-controls="panel-matrix" aria-selected="false" tabindex="-1" data-tab="matrix" type="button">东西比价矩阵</button>
         <button class="tab" role="tab" id="tab-west" aria-controls="panel-west" aria-selected="false" tabindex="-1" data-tab="west" type="button">西部短途刷段</button>
         <button class="tab" role="tab" id="tab-hawaii" aria-controls="panel-hawaii" aria-selected="false" tabindex="-1" data-tab="hawaii" type="button">夏威夷岛内</button>
@@ -572,129 +596,7 @@
         <div id="stopBoards" class="stack"></div>
       </section>
 
-      <section class="tab-panel" id="panel-tracker" role="tabpanel" aria-labelledby="tab-tracker" tabindex="0" hidden>
-        <div class="section-bar">
-          <div>
-            <p class="section-heading">Main 票价与 qualifying segments 记录器</p>
-            <p class="section-note">一条记录代表两张单程票。请在点进结果、选好实际中转后，按你本人承担的含税金额填写（多人同行不要填整单总额）；只有「已购 / 已飞」且亲自核对过资格的航段，才计入 8 段进度。</p>
-          </div>
-          <button class="pill link-ish" id="trackerExport" type="button">导出 CSV</button>
-        </div>
-
-        <div class="tracker-summary" id="trackerSummary" aria-live="polite"></div>
-
-        <form class="group tracker-form" id="trackerForm" novalidate>
-          <div class="group-header">
-            <div>
-              <span class="group-title" id="trackerFormTitle">记录一套方案</span>
-              <span class="group-subtitle">可以先只存路线，看到价格后再回来补齐或更新。</span>
-            </div>
-          </div>
-          <div class="tracker-form-grid">
-            <div class="form-field">
-              <label for="trackOrigin">起点</label>
-              <input class="code" id="trackOrigin" list="airportList" maxlength="3" placeholder="NYC" autocomplete="off" spellcheck="false" required>
-            </div>
-            <div class="form-field">
-              <label for="trackStop">停留城市</label>
-              <input class="code" id="trackStop" list="airportList" maxlength="3" placeholder="SEA" autocomplete="off" spellcheck="false" required>
-            </div>
-            <div class="form-field">
-              <label for="trackDest">最终目的地</label>
-              <input class="code" id="trackDest" list="airportList" maxlength="3" placeholder="SAN" autocomplete="off" spellcheck="false" required>
-            </div>
-            <div class="form-field">
-              <label for="trackStatus">状态</label>
-              <select id="trackStatus">
-                <option value="candidate">候选</option>
-                <option value="booked">已购</option>
-                <option value="flown">已飞</option>
-              </select>
-            </div>
-
-            <div class="form-field form-span-2">
-              <label for="trackDate1">第一程日期</label>
-              <input type="date" id="trackDate1" required>
-            </div>
-            <div class="form-field">
-              <label for="trackPrice1">第一张 Main 票价（USD）</label>
-              <input type="number" id="trackPrice1" min="0" step="0.01" inputmode="decimal" placeholder="例如 139">
-            </div>
-            <div class="form-field">
-              <label for="trackSegments1">第一张实际航段</label>
-              <select id="trackSegments1"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
-            </div>
-            <div class="form-field form-span-2 tracker-second-start">
-              <label for="trackDate2">第二程日期</label>
-              <input type="date" id="trackDate2" required>
-            </div>
-
-            <div class="form-field">
-              <label for="trackPrice2">第二张 Main 票价（USD）</label>
-              <input type="number" id="trackPrice2" min="0" step="0.01" inputmode="decimal" placeholder="例如 119">
-            </div>
-            <div class="form-field">
-              <label for="trackSegments2">第二张实际航段</label>
-              <select id="trackSegments2"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
-            </div>
-            <div class="form-field">
-              <label for="trackExtras">酒店 / 地面交通等（USD）</label>
-              <input type="number" id="trackExtras" min="0" step="0.01" inputmode="decimal" placeholder="0">
-            </div>
-            <div class="form-field">
-              <span class="form-label">资格核对</span>
-              <label class="inline-check" for="trackEligible"><input type="checkbox" id="trackEligible"><span>已确认 Main 且每个实际航段均符合挑战资格</span></label>
-            </div>
-
-            <div class="form-field form-span-2">
-              <label for="trackNote">备注</label>
-              <input type="text" id="trackNote" maxlength="160" placeholder="例如：SEA 停一晚；第二张需选 PDX 中转">
-            </div>
-          </div>
-
-          <div class="tracker-preview" id="trackerPreview" role="status" aria-live="polite">
-            <span>填入路线和价格后，这里会算每段成本。</span>
-            <div class="tracker-searches">
-              <a class="pill" id="trackerSearch1" target="_blank" rel="noopener noreferrer" aria-disabled="true">搜索第一程</a>
-              <a class="pill" id="trackerSearch2" target="_blank" rel="noopener noreferrer" aria-disabled="true">搜索第二程</a>
-            </div>
-          </div>
-          <div class="tracker-form-actions">
-            <button class="pill link-ish" id="trackerCancel" type="button" hidden>取消编辑</button>
-            <button class="pill" id="trackerSave" type="submit">保存方案</button>
-          </div>
-        </form>
-
-        <div class="tracker-toolbar">
-          <div class="filters">
-            <label for="trackerFilter">显示</label>
-            <select id="trackerFilter">
-              <option value="all">全部状态</option>
-              <option value="candidate">候选</option>
-              <option value="booked">已购</option>
-              <option value="flown">已飞</option>
-            </select>
-            <label for="trackerSort">排序</label>
-            <select id="trackerSort">
-              <option value="effective">全成本 / 段最低</option>
-              <option value="fare">纯票价 / 段最低</option>
-              <option value="total">总成本最低</option>
-              <option value="newest">最近更新</option>
-              <option value="status">状态</option>
-            </select>
-          </div>
-          <span class="section-note" id="trackerListCount"></span>
-        </div>
-
-        <div class="tracker-table-wrap">
-          <table class="tracker-table">
-            <caption class="sr-only">已记录的两张单程 Main 票价方案</caption>
-            <thead><tr><th scope="col">路线 / 日期</th><th scope="col">两张票价</th><th scope="col">航段</th><th scope="col">每段成本</th><th scope="col">状态</th><th scope="col">备注</th><th scope="col">操作</th></tr></thead>
-            <tbody id="trackerRows"></tbody>
-          </table>
-          <div class="tracker-empty" id="trackerEmpty">还没有方案。可以从「两程凑 4 段」点“＋ 记录”，也可以直接在上面填写。</div>
-        </div>
-      </section>
+      <section class="tab-panel" id="panel-tracker" role="tabpanel" aria-labelledby="tab-tracker" tabindex="0" hidden></section>
 
       <section class="tab-panel" id="panel-matrix" role="tabpanel" aria-labelledby="tab-matrix" tabindex="0" hidden>
         <div class="section-bar">
@@ -862,8 +764,9 @@
     const RESULTS_BASE = 'https://www.alaskaair.com/search/results';
     const STORAGE_KEY = 'atmos-search-console-v1';
     const SEEN_KEY = 'alaska-main-segment-launcher-seen-v1';
-    const TRACKER_KEY = 'atmos-search-console-price-tracker-v1';
-    const TRACKER_GOAL = 8;
+    const TRACKER_LEGACY_KEY = 'atmos-search-console-price-tracker-v1';
+    const TRACKER_KEY = 'atmos-search-console-price-tracker-v2';
+    const TRACKER_BACKUP_KEY = 'atmos-search-console-price-tracker-backup-v2';
     const TRACKER_STATUS = {
       candidate: { zh: '候选', en: 'Candidate' },
       booked: { zh: '已购', en: 'Booked' },
@@ -938,11 +841,7 @@
       '按住': 'Hold', '点击可在后台开新标签页。搜索结果是最终依据；参数、主题、已看标记与价格记录都保存在本机浏览器，重要记录可随时导出 CSV。': 'while clicking to open a background tab. Search results are final; preferences, theme, opened markers, and price records stay in this browser. Export important records to CSV.'
     };
 
-    const PLACEHOLDER_COPY = {
-      trackPrice1: { zh: '例如 139', en: 'e.g. 139' },
-      trackPrice2: { zh: '例如 119', en: 'e.g. 119' },
-      trackNote: { zh: '例如：SEA 停一晚；第二张需选 PDX 中转', en: 'e.g. Overnight in SEA; choose a PDX connection on ticket 2' }
-    };
+    const PLACEHOLDER_COPY = {};
 
     // Copy generated from route data rather than present in the initial DOM.
     const DATA_EN = {
@@ -1162,6 +1061,11 @@
     let recents = { cash: [], award: [] };
     let trackerPlans = [];
     let trackerEditingId = null;
+    let trackerDraftPlan = null;
+    let trackerDirty = false;
+    let trackerGoal = 8;
+    let trackerStorageBlocked = false;
+    let trackerNotice = ''; // Stable code, translated at render time.
     let staticCopies = [];
 
     function msg(zh, en) { return language === 'en' ? en : zh; }
@@ -1224,6 +1128,10 @@
       ariaCopies.forEach(([selector, zh, en]) => document.querySelector(selector).setAttribute('aria-label', msg(zh, en)));
       renderAirportList();
       if (!rerender) return;
+      clearTimeout(toastTimer);
+      el('toast').classList.remove('show');
+      el('toast').textContent = '';
+      renderTrackerShell();
       renderPresets();
       renderTips();
       setMode(mode);
@@ -1362,7 +1270,7 @@
           pax: el('pax').value, searchMode: el('searchMode').value,
           origin: el('origin').value, destination: el('destination').value,
           legOrigin: el('legOrigin').value, legDest: el('legDest').value,
-          trackerSort: el('trackerSort').value, trackerFilter: el('trackerFilter').value,
+          trackerSort: el('trackerSort')?.value || 'effective', trackerFilter: el('trackerFilter')?.value || 'all',
           awMonth: el('awMonth').value, awCabin: el('awCabin').value, awPax: el('awPax').value,
           awOrigin: el('awOrigin').value, awDest: el('awDest').value,
           cashTab: activeTabOf('mode-cash'), awardTab: activeTabOf('mode-award')
@@ -1527,235 +1435,294 @@
     /* ═══ 价格记录器 ═══ */
 
     function trackerId() {
-      if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') return globalThis.crypto.randomUUID();
-      return `plan-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      return globalThis.crypto?.randomUUID?.() || `plan-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
     }
-
+    function clonePlan(plan) { return JSON.parse(JSON.stringify(plan)); }
     function trackerNumber(value) {
       if (value === '' || value === null || value === undefined) return null;
       const n = Number(value);
       return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
     }
-
-    function normalizeTrackerPlan(raw) {
-      if (!raw || typeof raw !== 'object') return null;
-      const origin = normalizeCode(raw.origin);
-      const stop = normalizeCode(raw.stop);
-      const destination = normalizeCode(raw.destination);
-      if (origin.length !== 3 || stop.length !== 3 || destination.length !== 3 || stop === origin || stop === destination) return null;
-      const date1 = ISO.test(raw.date1 || '') ? raw.date1 : todayISO();
-      const date2 = ISO.test(raw.date2 || '') ? raw.date2 : date1;
-      const status = Object.prototype.hasOwnProperty.call(TRACKER_STATUS, raw.status) ? raw.status : 'candidate';
-      const segments1 = Math.min(8, Math.max(1, Math.round(Number(raw.segments1) || 2)));
-      const segments2 = Math.min(8, Math.max(1, Math.round(Number(raw.segments2) || 2)));
-      const createdAt = typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString();
-      const price1 = trackerNumber(raw.price1);
-      const price2 = trackerNumber(raw.price2);
-      return {
-        id: String(raw.id || trackerId()), origin, stop, destination, date1,
-        date2: date2 < date1 ? date1 : date2,
-        price1: price1 !== null && price1 >= 0 ? price1 : null,
-        price2: price2 !== null && price2 >= 0 ? price2 : null,
-        segments1, segments2,
-        extras: Math.max(0, trackerNumber(raw.extras) || 0),
-        status, eligible: Boolean(raw.eligible),
-        note: String(raw.note || '').slice(0, 160),
-        createdAt,
-        updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : createdAt
-      };
+    function validTrackerDate(value) {
+      if (!ISO.test(value || '')) return false;
+      const d = new Date(`${value}T12:00:00Z`);
+      return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
     }
-
-    function loadTrackerPlans() {
-      try {
-        const raw = JSON.parse(localStorage.getItem(TRACKER_KEY));
-        const list = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.plans) ? raw.plans : []);
-        return list.map(normalizeTrackerPlan).filter(Boolean);
-      } catch (_) { return []; }
+    function newFlight(origin = '', destination = '', date = dateOf('date1')) {
+      return { id: trackerId(), origin, destination, date, status: 'candidate', eligible: false };
     }
-
-    function saveTrackerPlans() {
-      try { localStorage.setItem(TRACKER_KEY, JSON.stringify({ version: 1, plans: trackerPlans })); } catch (_) {}
+    function newTicket(origin = '', destination = '', date = dateOf('date1')) {
+      return { id: trackerId(), price: null, segments: [newFlight(origin, destination, date)] };
     }
-
-    function trackerDraft() {
-      return {
-        origin: codeOf('trackOrigin'), stop: codeOf('trackStop'), destination: codeOf('trackDest'),
-        date1: el('trackDate1').value, date2: el('trackDate2').value,
-        price1: trackerNumber(el('trackPrice1').value), price2: trackerNumber(el('trackPrice2').value),
-        segments1: Number(el('trackSegments1').value), segments2: Number(el('trackSegments2').value),
-        extras: trackerNumber(el('trackExtras').value) || 0,
-        status: el('trackStatus').value,
-        eligible: el('trackEligible').checked,
-        note: el('trackNote').value.trim()
-      };
+    function newTrackerPlan() {
+      return { id: trackerId(), tickets: [newTicket(codeOf('origin'), codeOf('destination'))], extras: 0, note: '' };
     }
-
-    function trackerCalc(plan) {
-      const segments = (Number(plan.segments1) || 0) + (Number(plan.segments2) || 0);
-      const p1 = trackerNumber(plan.price1);
-      const p2 = trackerNumber(plan.price2);
-      const airfare = p1 !== null && p2 !== null ? p1 + p2 : null;
-      const extras = Math.max(0, trackerNumber(plan.extras) || 0);
-      const total = airfare === null ? null : airfare + extras;
-      return {
-        segments, airfare, extras, total,
-        farePerSegment: airfare !== null && segments ? airfare / segments : null,
-        effectivePerSegment: total !== null && segments ? total / segments : null
-      };
-    }
-
-    function trackerFormIssue(plan) {
-      if (plan.origin.length !== 3) return { id: 'trackOrigin', message: msg('起点要填满 3 个字母。', 'Enter a 3-letter start airport code.') };
-      if (plan.stop.length !== 3) return { id: 'trackStop', message: msg('停留城市要填满 3 个字母。', 'Enter a 3-letter break-city code.') };
-      if (plan.destination.length !== 3) return { id: 'trackDest', message: msg('最终目的地要填满 3 个字母。', 'Enter a 3-letter final-destination code.') };
-      if (plan.stop === plan.origin || plan.stop === plan.destination) return { id: 'trackStop', message: msg('停留城市不能和起点或终点相同。', 'The break city must differ from the start and final destination.') };
-      if (!ISO.test(plan.date1 || '')) return { id: 'trackDate1', message: msg('请选择第一程日期。', 'Choose the first ticket date.') };
-      if (!ISO.test(plan.date2 || '')) return { id: 'trackDate2', message: msg('请选择第二程日期。', 'Choose the second ticket date.') };
-      if (plan.date2 < plan.date1) return { id: 'trackDate2', message: msg('第二程日期不能早于第一程。', 'The second ticket cannot be earlier than the first.') };
-      for (const id of ['trackPrice1', 'trackPrice2', 'trackExtras']) {
-        const raw = el(id).value.trim();
-        if (raw !== '' && (!Number.isFinite(Number(raw)) || Number(raw) < 0)) return { id, message: msg('金额不能是负数。', 'Amounts cannot be negative.') };
-      }
-      return null;
-    }
-
     function formatMoney(value) {
       if (!Number.isFinite(value)) return '—';
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency', currency: 'USD',
-        minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
-        maximumFractionDigits: 2
-      }).format(value);
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 }).format(value);
+    }
+    function ticketRoute(ticket) {
+      return [ticket.segments[0].origin || '?', ...ticket.segments.map(s => s.destination || '?')].join(' → ');
+    }
+    function planRoute(plan) { return plan.tickets.map(ticketRoute).join(' / '); }
+    function planFlights(plan) { return plan.tickets.flatMap(t => t.segments); }
+    function planStatus(plan) {
+      const statuses = new Set(planFlights(plan).map(s => s.status));
+      return statuses.size === 1 ? [...statuses][0] : 'mixed';
+    }
+    function trackerCalc(plan) {
+      const flights = planFlights(plan);
+      const prices = plan.tickets.map(t => trackerNumber(t.price));
+      const knownFare = prices.reduce((sum, price) => sum + (price ?? 0), 0);
+      const missingPrices = prices.filter(p => p === null).length;
+      const airfare = missingPrices ? null : knownFare;
+      const extras = trackerNumber(plan.extras) || 0;
+      const total = airfare === null ? null : airfare + extras;
+      const eligible = flights.filter(s => s.eligible).length;
+      return {
+        segments: flights.length, eligible, airfare, knownFare, missingPrices, extras, total,
+        farePerSegment: airfare === null ? null : airfare / flights.length,
+        effectivePerSegment: total === null ? null : total / flights.length,
+        qualifyingPerSegment: total === null || !eligible ? null : total / eligible,
+        booked: flights.filter(s => s.eligible && s.status === 'booked').length,
+        flown: flights.filter(s => s.eligible && s.status === 'flown').length
+      };
     }
 
-    function updateTrackerSearchLink(id, o, d, date, label) {
-      const link = el(id);
-      const valid = o.length === 3 && d.length === 3 && o !== d && ISO.test(date || '');
-      link.textContent = valid ? `${label} ${o} → ${d}` : label;
-      if (!valid) {
-        link.removeAttribute('href');
-        link.removeAttribute('data-seen-key');
-        link.setAttribute('aria-disabled', 'true');
-        link.classList.remove('seen');
-        return;
+    // Strict whole-file validation: malformed records never silently disappear.
+    function normalizeTrackerPlan(raw) {
+      if (!raw || typeof raw !== 'object') throw new Error('Invalid plan');
+      if (!Array.isArray(raw.tickets) || raw.tickets.length < 1 || raw.tickets.length > 20) throw new Error('Invalid ticket list');
+      const money = (value, optional = false) => {
+        if (optional && (value === null || value === '')) return null;
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 10000000) throw new Error('Invalid amount');
+        return trackerNumber(value);
+      };
+      const tickets = raw.tickets.map(t => {
+        if (!t || !Array.isArray(t.segments) || t.segments.length < 1 || t.segments.length > 16) throw new Error('Invalid flight list');
+        const segments = t.segments.map(s => {
+          if (!s || !/^[A-Z]{3}$|^$/.test(s.origin) || !/^[A-Z]{3}$|^$/.test(s.destination)) throw new Error('Invalid airport');
+          if (!validTrackerDate(s.date) || !Object.hasOwn(TRACKER_STATUS, s.status) || typeof s.eligible !== 'boolean') throw new Error('Invalid flight data');
+          if (s.origin && s.origin === s.destination) throw new Error('Same airport');
+          return { id: typeof s.id === 'string' ? s.id : trackerId(), origin: s.origin, destination: s.destination, date: s.date, status: s.status, eligible: s.eligible };
+        });
+        if (!segments[0].origin || !segments.at(-1).destination) throw new Error('Missing ticket endpoint');
+        segments.forEach((s, i) => {
+          if (!t.legacyUnresolved && (!s.origin || !s.destination)) throw new Error('Missing airport');
+          if (i && (segments[i - 1].destination !== s.origin || segments[i - 1].date > s.date)) throw new Error('Invalid connection');
+        });
+        return { id: typeof t.id === 'string' ? t.id : trackerId(), price: money(t.price, true), segments,
+          legacyUnresolved: Boolean(t.legacyUnresolved && segments.some(s => !s.origin || !s.destination)) };
+      });
+      return {
+        id: typeof raw.id === 'string' && raw.id ? raw.id : trackerId(), tickets,
+        extras: money(raw.extras ?? 0), note: String(raw.note || '').slice(0, 2000),
+        createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
+        updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
+        migrated: Boolean(raw.migrated)
+      };
+    }
+    function migrateLegacyPlan(raw) {
+      if (!raw || !['origin', 'stop', 'destination'].every(k => /^[A-Z]{3}$/.test(raw[k]))) throw new Error('Invalid legacy route');
+      const makeLegacyTicket = (origin, destination, date, price, count) => {
+        count = Number(count);
+        if (!Number.isInteger(count) || count < 1 || count > 8 || !validTrackerDate(date)) throw new Error('Invalid legacy ticket');
+        if (price !== null && price !== '' && price !== undefined && (!Number.isFinite(Number(price)) || Number(price) < 0)) throw new Error('Invalid legacy price');
+        return { id: trackerId(), price: trackerNumber(price), legacyUnresolved: count > 1,
+          segments: Array.from({ length: count }, (_, i) => ({
+            id: trackerId(), origin: i === 0 ? origin : '', destination: i === count - 1 ? destination : '', date,
+            status: raw.status, eligible: raw.eligible
+          })) };
+      };
+      return normalizeTrackerPlan({
+        ...raw, migrated: true,
+        tickets: [makeLegacyTicket(raw.origin, raw.stop, raw.date1, raw.price1, raw.segments1),
+          makeLegacyTicket(raw.stop, raw.destination, raw.date2, raw.price2, raw.segments2)]
+      });
+    }
+    function parseTrackerPayload(payload) {
+      const legacy = Array.isArray(payload) || payload?.version === 1;
+      if (!legacy && payload?.version !== 2) throw new Error('Unsupported backup version');
+      const list = Array.isArray(payload) ? payload : payload.plans;
+      if (!Array.isArray(list) || list.length > 2000) throw new Error('Invalid backup');
+      const plans = list.map(legacy ? migrateLegacyPlan : normalizeTrackerPlan);
+      if (new Set(plans.map(p => p.id)).size !== plans.length) throw new Error('Duplicate plan IDs');
+      const goal = legacy ? trackerGoal : Number(payload.goal);
+      if (!Number.isInteger(goal) || goal < 1 || goal > 1000) throw new Error('Invalid goal');
+      return { version: 2, goal, plans };
+    }
+    function trackerPayload(plans = trackerPlans, goal = trackerGoal) { return { version: 2, goal, plans }; }
+    function loadTrackerPlans() {
+      try {
+        const current = localStorage.getItem(TRACKER_KEY);
+        if (current !== null) {
+          const data = parseTrackerPayload(JSON.parse(current));
+          trackerGoal = data.goal;
+          return data.plans;
+        }
+        const legacy = localStorage.getItem(TRACKER_LEGACY_KEY);
+        if (legacy === null) return [];
+        const data = parseTrackerPayload(JSON.parse(legacy));
+        // Keep the old key untouched; write the new format only after full validation.
+        localStorage.setItem(TRACKER_KEY, JSON.stringify(data));
+        trackerNotice = data.plans.length ? 'migrated' : '';
+        return data.plans;
+      } catch (_) {
+        trackerStorageBlocked = true;
+        trackerNotice = 'blocked';
+        return [];
       }
-      const key = `cash:${o}>${d}@${date}`;
-      link.href = cashUrl(o, d, date);
-      link.dataset.seenKey = key;
-      link.setAttribute('aria-disabled', 'false');
-      link.classList.toggle('seen', seen.has(key));
+    }
+    function persistTracker(plans, goal = trackerGoal) {
+      if (trackerStorageBlocked) { showToast(msg('数据读取异常，已暂停写入，请先备份原始数据。', 'Data could not be read. Writes are paused; back up raw data first.')); return false; }
+      try {
+        // Validate everything before either write. Failure leaves the visible state unchanged.
+        const data = parseTrackerPayload(trackerPayload(plans, goal));
+        const previous = localStorage.getItem(TRACKER_KEY);
+        if (previous !== null) localStorage.setItem(TRACKER_BACKUP_KEY, previous);
+        localStorage.setItem(TRACKER_KEY, JSON.stringify(data));
+        trackerPlans = data.plans;
+        trackerGoal = data.goal;
+        return true;
+      } catch (_) {
+        showToast(msg('未保存：浏览器存储不可用、空间不足或数据无效。请先导出 JSON 备份。', 'Not saved: storage is unavailable/full or data is invalid. Export a JSON backup first.'));
+        return false;
+      }
     }
 
+    function renderTrackerShell() {
+      const filter = el('trackerFilter')?.value || 'all';
+      const sort = el('trackerSort')?.value || 'effective';
+      const option = (value, zh, en) => `<option value="${value}">${msg(zh, en)}</option>`;
+      el('panel-tracker').innerHTML = `
+        <div class="section-bar"><div><p class="section-heading">${msg('机票与航段记录器', 'Tickets & flight segments')}</p>
+          <p class="section-note">${msg('一张票填一次总价；每次实际飞行单独记录。直飞无需中转，联程无需拆分票价。金额请填你本人承担的含税 USD。', 'Enter the total price once per ticket and record each actual flight separately. No connection is needed for a nonstop; no fare split is needed for a connecting ticket. Enter your own tax-inclusive share in USD.')}</p></div>
+          <div class="pill-row"><button class="pill" id="trackerBackup" type="button">${msg('备份 JSON', 'Back up JSON')}</button><button class="pill" id="trackerImport" type="button">${msg('导入 / 恢复', 'Import / restore')}</button><button class="pill link-ish" id="trackerExport" type="button">${msg('导出 CSV', 'Export CSV')}</button></div>
+        </div>
+        <input type="file" id="trackerImportFile" accept=".json,.csv,application/json,text/csv" hidden>
+        <div class="tracker-banner" id="trackerNotice" role="status" hidden></div>
+        <div class="tracker-toolbar"><label class="control-group tracker-goal" for="trackerGoal">${msg('目标航段', 'Segment goal')} <input id="trackerGoal" type="number" min="1" max="1000" step="1" value="${trackerGoal}"></label>
+          <div class="pill-row"><button class="pill" type="button" data-tracker-goal="4">4</button><button class="pill" type="button" data-tracker-goal="8">8</button><button class="pill" type="button" data-tracker-goal="20">20</button></div>
+          <button class="pill link-ish" id="trackerUndo" type="button">${msg('恢复上次修改前', 'Restore previous revision')}</button></div>
+        <div class="tracker-summary" id="trackerSummary" aria-live="polite"></div>
+        <form class="group tracker-form" id="trackerForm" novalidate>
+          <div class="group-header"><span class="group-title" id="trackerFormTitle"></span><button class="pill link-ish" id="trackerCancel" type="button">${msg('清空 / 取消编辑', 'Reset / cancel edit')}</button></div>
+          <p class="section-note">${msg('默认是一张直飞票。联程点「添加中转」，分开买的票点「添加另一张票」。候选价格可以稍后补齐。', 'Start with one nonstop ticket. Use “Add connection” for connecting flights and “Add another ticket” for separately purchased tickets. Candidate fares can be added later.')}</p>
+          <div id="trackerTickets"></div>
+          <button class="pill" id="trackerAddTicket" type="button">${msg('＋ 添加另一张票', '+ Add another ticket')}</button>
+          <div class="tracker-form-grid" style="margin-top:16px"><div class="form-field form-span-2"><label for="trackExtras">${msg('整个方案额外成本（USD，只计一次）', 'Plan extras (USD, counted once)')}</label><input id="trackExtras" type="number" min="0" max="10000000" step="0.01" inputmode="decimal"></div>
+          <div class="form-field form-span-2"><label for="trackNote">${msg('方案备注', 'Plan notes')}</label><input id="trackNote" type="text" maxlength="2000"></div></div>
+          <div class="tracker-preview" id="trackerPreview" role="status" aria-live="polite"></div>
+          <div class="tracker-form-actions"><button class="pill" id="trackerSave" type="submit">${msg('保存方案', 'Save plan')}</button></div>
+        </form>
+        <div class="tracker-toolbar"><div class="filters"><label for="trackerFilter">${msg('显示', 'Show')}</label><select id="trackerFilter">${option('all','全部状态','All statuses')}${option('candidate','含候选航段','Contains candidates')}${option('booked','含已购待飞航段','Contains booked flights')}${option('flown','含已飞航段','Contains flown flights')}</select>
+        <label for="trackerSort">${msg('排序', 'Sort')}</label><select id="trackerSort">${option('effective','全成本 / 实际段最低','Lowest all-in / actual segment')}${option('fare','票价 / 实际段最低','Lowest airfare / actual segment')}${option('total','总成本最低','Lowest total')}${option('newest','最近更新','Recently updated')}${option('status','状态','Status')}</select></div><span class="section-note" id="trackerListCount"></span></div>
+        <div id="trackerRows" class="stack"></div><div id="trackerEmpty" class="tracker-empty"></div>
+        <p class="section-note">${msg('JSON 用于完整恢复；CSV 用于分析。导入支持 JSON 和旧版两张票 CSV，新版 CSV 不作为恢复备份。数据只在当前浏览器，未上传到 GitHub。', 'JSON is a full restore backup; CSV is for analysis. Import accepts JSON and legacy two-ticket CSV, not the new analysis CSV. Data stays in this browser and is not uploaded to GitHub.')}</p>`;
+      el('trackerFilter').value = filter;
+      el('trackerSort').value = sort;
+      if (!trackerDraftPlan) trackerDraftPlan = newTrackerPlan();
+      renderTicketEditors();
+      renderTracker();
+    }
+    function renderTicketEditors() {
+      const plan = trackerDraftPlan;
+      const field = (id, label, attrs) => `<div class="form-field"><label for="${id}">${label}</label><input id="${id}" ${attrs}></div>`;
+      el('trackerTickets').innerHTML = plan.tickets.map((ticket, ti) => `
+        <div class="ticket-editor" data-ticket-index="${ti}"><div class="group-header"><span class="group-title">${msg('机票', 'Ticket')} ${ti + 1} · ${ticket.segments.length} ${msg('个实际航段', 'actual segments')}</span>
+          ${plan.tickets.length > 1 ? `<button class="pill link-ish" type="button" data-ticket-remove="${ti}">${msg('移除这张票', 'Remove ticket')}</button>` : ''}</div>
+          <div class="ticket-price-field">${field(`ticket-price-${ti}`, msg('整张票含税总价（USD）', 'Whole-ticket total (USD, incl. tax)'), `data-ticket-price="${ti}" type="number" min="0" max="10000000" step="0.01" inputmode="decimal" value="${ticket.price ?? ''}" placeholder="${msg('待补，可留空', 'Pending; optional')}"`)}</div>
+          ${ticket.legacyUnresolved ? `<p class="section-note" style="color:var(--text-warn)">${msg('旧记录只保存了段数，未保存中转机场；空白机场待核对，原价格和段数均保留。', 'The old record saved segment counts but not connection airports. Blank airports need review; original fares and counts are preserved.')}</p>` : ''}
+          ${ticket.segments.map((s, si) => {
+            const base = `flight-${ti}-${si}`;
+            const attrs = `data-ticket="${ti}" data-flight="${si}"`;
+            return `<div class="flight-editor"><span class="check-n">${si + 1}</span>
+              ${field(`${base}-origin`, msg('出发', 'From'), `${attrs} data-flight-field="origin" class="code" type="text" maxlength="3" list="airportList" autocomplete="off" value="${escapeHTML(s.origin)}" placeholder="${msg('机场', 'IATA')}"`)}
+              ${field(`${base}-destination`, msg('到达', 'To'), `${attrs} data-flight-field="destination" class="code" type="text" maxlength="3" list="airportList" autocomplete="off" value="${escapeHTML(s.destination)}" placeholder="${msg('机场', 'IATA')}"`)}
+              <div class="form-field flight-date"><label for="${base}-date">${msg('当地出发日期', 'Local departure date')}</label><input id="${base}-date" ${attrs} data-flight-field="date" type="date" value="${escapeHTML(s.date)}"></div>
+              <div class="form-field"><label for="${base}-status">${msg('这一段状态', 'Flight status')}</label><select id="${base}-status" ${attrs} data-flight-field="status">${Object.keys(TRACKER_STATUS).map(k => `<option value="${k}"${s.status === k ? ' selected' : ''}>${statusText(k)}</option>`).join('')}</select></div>
+              <label class="inline-check flight-check" for="${base}-eligible"><input id="${base}-eligible" ${attrs} data-flight-field="eligible" type="checkbox"${s.eligible ? ' checked' : ''}>${msg('已核对这一段 Main / 挑战资格', 'Main / challenge eligibility verified for this flight')}</label>
+              ${ticket.segments.length > 1 ? `<button class="pill link-ish flight-remove" type="button" data-flight-remove="${ti},${si}">${msg('移除这一段', 'Remove flight')}</button>` : ''}</div>`;
+          }).join('')}
+          <div class="pill-row"><button class="pill" type="button" data-flight-add="${ti}">${msg('＋ 添加中转 / 航段', '+ Add connection / flight')}</button><a class="pill link-ish" id="ticket-search-${ti}" target="_blank" rel="noopener noreferrer">${msg('搜索整张票', 'Search whole ticket')}</a></div>
+        </div>`).join('');
+      el('trackExtras').value = plan.extras;
+      el('trackNote').value = plan.note;
+      el('trackerFormTitle').textContent = trackerEditingId ? msg('编辑方案', 'Edit plan') : msg('记录新方案', 'Add a plan');
+      el('trackerSave').textContent = trackerEditingId ? msg('更新方案', 'Update plan') : msg('保存方案', 'Save plan');
+      updateTrackerForm();
+    }
+    function trackerFormIssue(plan) {
+      for (let ti = 0; ti < plan.tickets.length; ti++) {
+        const t = plan.tickets[ti];
+        const priceEl = el(`ticket-price-${ti}`);
+        if (priceEl?.validity.badInput || (t.price !== null && (!Number.isFinite(t.price) || t.price < 0 || t.price > 10000000))) return { id: `ticket-price-${ti}`, message: msg('请输入有效非负票价，或留空待补。', 'Enter a valid nonnegative fare, or leave it blank.') };
+        for (let si = 0; si < t.segments.length; si++) {
+          const s = t.segments[si];
+          for (const name of ['origin', 'destination']) {
+            const endpoint = (si === 0 && name === 'origin') || (si === t.segments.length - 1 && name === 'destination');
+            if (!/^[A-Z]{3}$/.test(s[name]) && !(t.legacyUnresolved && !endpoint && s[name] === '')) return { id: `flight-${ti}-${si}-${name}`, message: msg('请补齐 3 字母机场代码。', 'Complete the 3-letter airport code.') };
+          }
+          if (s.origin && s.origin === s.destination) return { id: `flight-${ti}-${si}-destination`, message: msg('同一航段的出发和到达不能相同。', 'A flight must have different origin and destination airports.') };
+          if (!validTrackerDate(s.date)) return { id: `flight-${ti}-${si}-date`, message: msg('请选择有效出发日期。', 'Choose a valid departure date.') };
+          if (si && (t.segments[si - 1].destination !== s.origin || t.segments[si - 1].date > s.date)) return { id: `flight-${ti}-${si}-date`, message: msg('请检查中转机场衔接与日期顺序。', 'Check the connection airport and date order.') };
+        }
+      }
+      if (el('trackExtras')?.validity.badInput || !Number.isFinite(plan.extras) || plan.extras < 0 || plan.extras > 10000000) return { id: 'trackExtras', message: msg('额外费用须为有效非负金额。', 'Extras must be a valid nonnegative amount.') };
+      return null;
+    }
     function updateTrackerForm() {
-      for (const id of ['trackOrigin', 'trackStop', 'trackDest']) el(id).value = codeOf(id);
-      const plan = trackerDraft();
-      if (ISO.test(plan.date1 || '')) el('trackDate2').min = plan.date1;
-      updateTrackerSearchLink('trackerSearch1', plan.origin, plan.stop, plan.date1, msg('搜索第一程', 'Search ticket 1'));
-      updateTrackerSearchLink('trackerSearch2', plan.stop, plan.destination, plan.date2, msg('搜索第二程', 'Search ticket 2'));
-
-      const preview = el('trackerPreview');
-      const copy = preview.firstElementChild;
-      const issue = trackerFormIssue(plan);
-      if (issue) {
-        copy.textContent = issue.message;
-        preview.classList.add('warn');
-        return;
-      }
-
-      const calc = trackerCalc(plan);
-      const route = `${plan.origin} → ${plan.stop} → ${plan.destination}`;
-      if (calc.total === null) {
-        copy.innerHTML = msg(
-          `<strong>${escapeHTML(route)}</strong> · ${calc.segments} 段 · 票价可稍后补齐`,
-          `<strong>${escapeHTML(route)}</strong> · ${calc.segments} segments · fares can be added later`
-        );
-      } else {
-        copy.innerHTML = msg(
-          `<strong>${escapeHTML(route)}</strong> · 票价 ${formatMoney(calc.airfare)} · 全成本 ${formatMoney(calc.total)} · <strong>${formatMoney(calc.effectivePerSegment)} / 段</strong>`,
-          `<strong>${escapeHTML(route)}</strong> · airfare ${formatMoney(calc.airfare)} · all-in ${formatMoney(calc.total)} · <strong>${formatMoney(calc.effectivePerSegment)} / segment</strong>`
-        );
-      }
-      const waitingCheck = plan.status !== 'candidate' && !plan.eligible;
-      if (waitingCheck) copy.append(msg(' · 尚未核对资格，不计入进度', ' · eligibility not verified; excluded from progress'));
-      preview.classList.toggle('warn', waitingCheck);
+      if (!trackerDraftPlan || !el('trackerPreview')) return;
+      const plan = trackerDraftPlan;
+      plan.tickets.forEach((t, i) => {
+        const a = el(`ticket-search-${i}`);
+        if (!a) return;
+        const first = t.segments[0], last = t.segments.at(-1);
+        if (/^[A-Z]{3}$/.test(first.origin) && /^[A-Z]{3}$/.test(last.destination) && first.origin !== last.destination && validTrackerDate(first.date)) {
+          a.href = cashUrl(first.origin, last.destination, first.date);
+          a.dataset.seenKey = `cash:${first.origin}>${last.destination}@${first.date}`;
+          a.removeAttribute('aria-disabled');
+          a.title = msg('搜索整张票的起点到终点；实际中转须在结果中核对。', 'Search the full ticket endpoints; verify the actual connection in the results.');
+        } else { a.removeAttribute('href'); a.removeAttribute('data-seen-key'); a.setAttribute('aria-disabled', 'true'); }
+      });
+      const issue = trackerFormIssue(plan), calc = trackerCalc(plan);
+      el('trackerPreview').classList.toggle('warn', Boolean(issue));
+      el('trackerPreview').textContent = issue ? issue.message :
+        msg(`${plan.tickets.length} 张票 · ${calc.segments} 个实际航段 · `, `${plan.tickets.length} tickets · ${calc.segments} actual segments · `) +
+        (calc.total === null
+          ? msg(`已填票价 ${formatMoney(calc.knownFare)}，另有 ${calc.missingPrices} 张待补；暂不计算每段成本。`, `Entered airfare ${formatMoney(calc.knownFare)}; ${calc.missingPrices} fares pending. Per-segment cost is not calculated yet.`)
+          : msg(`票价 ${formatMoney(calc.airfare)} · 全成本 ${formatMoney(calc.total)} · ${formatMoney(calc.effectivePerSegment)} / 实际段`, `Airfare ${formatMoney(calc.airfare)} · all-in ${formatMoney(calc.total)} · ${formatMoney(calc.effectivePerSegment)} / actual segment`));
     }
-
-    function defaultTrackerStop(origin, destination) {
-      return ['SEA', 'PDX', 'BOI', 'SFO'].find(code => code !== origin && code !== destination) || 'SEA';
-    }
-
     function resetTrackerForm() {
       trackerEditingId = null;
-      el('trackerForm').reset();
-      const origin = codeOf('legOrigin').length === 3 ? codeOf('legOrigin') : 'NYC';
-      const destination = codeOf('legDest').length === 3 ? codeOf('legDest') : 'SAN';
-      el('trackOrigin').value = origin;
-      el('trackStop').value = defaultTrackerStop(origin, destination);
-      el('trackDest').value = destination;
-      el('trackDate1').value = dateOf('date1');
-      el('trackDate2').value = dateOf('date2');
-      el('trackSegments1').value = '2';
-      el('trackSegments2').value = '2';
-      el('trackerFormTitle').textContent = msg('记录一套方案', 'Add a plan');
-      el('trackerSave').textContent = msg('保存方案', 'Save plan');
-      el('trackerCancel').hidden = true;
-      updateTrackerForm();
+      trackerDraftPlan = newTrackerPlan();
+      trackerDirty = false;
+      renderTicketEditors();
     }
-
+    function canDiscardTrackerDraft() {
+      return !trackerDirty || window.confirm(msg('放弃当前未保存的修改吗？已保存的记录不会被删除。', 'Discard unsaved changes? Saved records will not be deleted.'));
+    }
     function prefillTracker(origin, stop, destination) {
-      resetTrackerForm();
-      el('trackOrigin').value = normalizeCode(origin);
-      el('trackStop').value = normalizeCode(stop);
-      el('trackDest').value = normalizeCode(destination);
-      el('trackDate1').value = dateOf('date1');
-      el('trackDate2').value = dateOf('date2');
-      updateTrackerForm();
+      trackerEditingId = null;
+      trackerDraftPlan = newTrackerPlan();
+      trackerDraftPlan.tickets = [[origin, stop, dateOf('date1')], [stop, destination, dateOf('date2')]].map(([o, d, date]) => ({ id: trackerId(), price: null, segments: [newFlight(o, '', date), newFlight('', d, date)] }));
+      trackerDirty = true;
+      renderTicketEditors();
     }
-
     function populateTrackerForm(plan) {
       trackerEditingId = plan.id;
-      el('trackOrigin').value = plan.origin;
-      el('trackStop').value = plan.stop;
-      el('trackDest').value = plan.destination;
-      el('trackDate1').value = plan.date1;
-      el('trackDate2').value = plan.date2;
-      el('trackPrice1').value = plan.price1 ?? '';
-      el('trackPrice2').value = plan.price2 ?? '';
-      el('trackSegments1').value = String(plan.segments1);
-      el('trackSegments2').value = String(plan.segments2);
-      el('trackExtras').value = plan.extras || '';
-      el('trackStatus').value = plan.status;
-      el('trackEligible').checked = plan.eligible;
-      el('trackNote').value = plan.note;
-      el('trackerFormTitle').textContent = msg(`编辑 ${plan.origin} → ${plan.stop} → ${plan.destination}`, `Edit ${plan.origin} → ${plan.stop} → ${plan.destination}`);
-      el('trackerSave').textContent = msg('更新方案', 'Update plan');
-      el('trackerCancel').hidden = false;
-      updateTrackerForm();
+      trackerDraftPlan = clonePlan(plan);
+      trackerDirty = false;
+      renderTicketEditors();
     }
-
     function saveTrackerFromForm() {
-      const draft = trackerDraft();
-      const issue = trackerFormIssue(draft);
-      if (issue) {
-        updateTrackerForm();
-        el(issue.id).focus();
-        showToast(issue.message);
-        return;
-      }
-
+      const issue = trackerFormIssue(trackerDraftPlan);
+      if (issue) { updateTrackerForm(); el(issue.id)?.focus(); showToast(issue.message); return; }
+      const old = trackerPlans.find(p => p.id === trackerEditingId);
       const now = new Date().toISOString();
-      const old = trackerEditingId ? trackerPlans.find(plan => plan.id === trackerEditingId) : null;
-      const plan = normalizeTrackerPlan({
-        ...draft,
-        id: old ? old.id : trackerId(),
-        createdAt: old ? old.createdAt : now,
-        updatedAt: now
-      });
-      if (!plan) { showToast(msg('这条方案无法保存，请检查路线', 'This plan could not be saved; check the route')); return; }
-
-      if (old) trackerPlans = trackerPlans.map(item => item.id === old.id ? plan : item);
-      else trackerPlans.unshift(plan);
-      saveTrackerPlans();
+      const draft = { ...trackerDraftPlan, createdAt: old?.createdAt || now, updatedAt: now };
+      const plans = old ? trackerPlans.map(p => p.id === old.id ? draft : p) : [...trackerPlans, draft];
+      if (!persistTracker(plans)) return;
       resetTrackerForm();
       renderTracker();
       refreshSeen();
@@ -1763,139 +1730,178 @@
     }
 
     function renderTrackerSummary() {
-      const calculations = trackerPlans.map(plan => ({ plan, calc: trackerCalc(plan) }));
-      const locked = calculations.filter(({ plan }) => plan.eligible && plan.status !== 'candidate');
-      const flown = calculations.filter(({ plan }) => plan.eligible && plan.status === 'flown');
-      const lockedSegments = locked.reduce((sum, item) => sum + item.calc.segments, 0);
-      const flownSegments = flown.reduce((sum, item) => sum + item.calc.segments, 0);
-      const complete = calculations.filter(item => item.calc.effectivePerSegment !== null);
-      const cheapest = complete.length ? Math.min(...complete.map(item => item.calc.effectivePerSegment)) : null;
-      const lockedCost = calculations
-        .filter(({ plan, calc }) => plan.status !== 'candidate' && calc.total !== null)
-        .reduce((sum, item) => sum + item.calc.total, 0);
-      const percent = Math.min(100, lockedSegments / TRACKER_GOAL * 100);
-
-      el('trackerSummary').innerHTML = `
-        <div class="tracker-metric"><span class="value">${trackerPlans.length}</span><span class="label">${msg('已存方案', 'Saved plans')}</span></div>
-        <div class="tracker-metric"><span class="value">${lockedSegments} / ${TRACKER_GOAL}</span><span class="label">${msg('合资格已锁定航段', 'Eligible locked segments')}</span></div>
-        <div class="tracker-metric"><span class="value">${flownSegments}</span><span class="label">${msg('合资格已飞航段', 'Eligible flown segments')}</span></div>
-        <div class="tracker-metric"><span class="value">${formatMoney(cheapest)}</span><span class="label">${msg('最低全成本 / 段', 'Lowest all-in / segment')}</span></div>
-        <div class="tracker-metric tracker-wide-mobile"><span class="value">${formatMoney(lockedCost)}</span><span class="label">${msg('已填的已购 / 已飞成本', 'Entered booked / flown cost')}</span></div>
-        <div class="tracker-metric tracker-progress-card">
-          <div class="tracker-progress-head"><span>${msg('Gold 目标进度', 'Gold goal progress')}</span><b>${lockedSegments} / ${TRACKER_GOAL} ${msg('段', 'segments')}${lockedSegments >= TRACKER_GOAL ? msg(' · 已达标', ' · goal reached') : ''}</b></div>
-          <div class="tracker-progress" role="progressbar" aria-label="${msg('Gold 目标进度', 'Gold goal progress')}" aria-valuemin="0" aria-valuemax="${TRACKER_GOAL}" aria-valuenow="${Math.min(lockedSegments, TRACKER_GOAL)}"><span style="width:${percent}%"></span></div>
-        </div>`;
+      const all = trackerPlans.map(p => trackerCalc(p));
+      const flown = all.reduce((n, c) => n + c.flown, 0), booked = all.reduce((n, c) => n + c.booked, 0);
+      const costs = all.map(c => c.effectivePerSegment).filter(Number.isFinite);
+      const cheapest = costs.length ? Math.min(...costs) : null;
+      let enteredCost = 0, missingPurchased = 0;
+      trackerPlans.forEach(p => {
+        const bought = p.tickets.filter(t => t.segments.some(s => s.status !== 'candidate'));
+        if (bought.length) enteredCost += p.extras;
+        bought.forEach(t => { if (t.price === null) missingPurchased++; else enteredCost += t.price; });
+      });
+      const metric = (value, label) => `<div class="tracker-metric"><span class="value">${value}</span><span class="label">${label}</span></div>`;
+      const percent = Math.min(100, flown / trackerGoal * 100);
+      el('trackerSummary').innerHTML =
+        metric(trackerPlans.length, msg('已存方案', 'Saved plans')) +
+        metric(booked, msg('合资格已购待飞', 'Eligible booked, not flown')) +
+        metric(flown, msg('合资格已飞', 'Eligible flown')) +
+        metric(formatMoney(cheapest), msg('最低全成本 / 实际段', 'Lowest all-in / actual segment')) +
+        metric(formatMoney(enteredCost), msg(`已购 / 已飞已填成本${missingPurchased ? `（${missingPurchased} 张票价待补）` : ''}`, `Entered booked / flown cost${missingPurchased ? ` (${missingPurchased} fares pending)` : ''}`)) +
+        `<div class="tracker-metric tracker-progress-card"><div class="tracker-progress-head"><span>${msg('实际完成进度（以账户入账为准）', 'Completed progress (confirm account credit)')}</span><b>${flown} / ${trackerGoal} ${msg('段', 'segments')}${flown >= trackerGoal ? msg(' · 已飞达到目标', ' · flown goal reached') : ''}</b></div>
+        <div class="tracker-progress" role="progressbar" aria-label="${msg('已飞目标进度', 'Flown goal progress')}" aria-valuemin="0" aria-valuemax="${trackerGoal}" aria-valuenow="${Math.min(flown, trackerGoal)}"><span style="width:${percent}%"></span></div>
+        <p class="section-note" style="margin-top:8px">${msg(`已购待飞全部完成后预计 ${flown + booked} / ${trackerGoal} 段。候选和未核对资格的航段不计入；此处不是官方会籍认证。`, `After all eligible booked flights: projected ${flown + booked} / ${trackerGoal} segments. Candidates and unverified flights are excluded. This is not official status certification.`)}</p></div>`;
     }
-
     function renderTracker() {
-      const editing = trackerEditingId ? trackerPlans.find(plan => plan.id === trackerEditingId) : null;
-      el('trackerFormTitle').textContent = editing
-        ? msg(`编辑 ${editing.origin} → ${editing.stop} → ${editing.destination}`, `Edit ${editing.origin} → ${editing.stop} → ${editing.destination}`)
-        : msg('记录一套方案', 'Add a plan');
-      el('trackerSave').textContent = editing ? msg('更新方案', 'Update plan') : msg('保存方案', 'Save plan');
+      if (!el('trackerRows')) return;
       renderTrackerSummary();
-      const count = el('trackerTabCount');
-      count.textContent = String(trackerPlans.length);
-      count.hidden = trackerPlans.length === 0;
-      el('trackerExport').disabled = trackerPlans.length === 0;
-
-      const filter = el('trackerFilter').value;
-      const sort = el('trackerSort').value;
-      const rows = trackerPlans
-        .filter(plan => filter === 'all' || plan.status === filter)
-        .map(plan => ({ plan, calc: trackerCalc(plan) }));
-      const metric = item => {
-        if (sort === 'fare') return item.calc.farePerSegment ?? Infinity;
-        if (sort === 'total') return item.calc.total ?? Infinity;
-        return item.calc.effectivePerSegment ?? Infinity;
-      };
-      const statusOrder = { candidate: 0, booked: 1, flown: 2 };
+      el('trackerTabCount').textContent = String(trackerPlans.length);
+      el('trackerTabCount').hidden = !trackerPlans.length;
+      el('trackerExport').disabled = !trackerPlans.length;
+      el('trackerSave').disabled = trackerStorageBlocked;
+      el('trackerImport').disabled = trackerStorageBlocked;
+      el('trackerGoal').disabled = trackerStorageBlocked;
+      el('trackerGoal').value = trackerGoal;
+      try { el('trackerUndo').disabled = trackerStorageBlocked || localStorage.getItem(TRACKER_BACKUP_KEY) === null; } catch (_) { el('trackerUndo').disabled = true; }
+      document.querySelectorAll('[data-tracker-goal]').forEach(b => { b.disabled = trackerStorageBlocked; b.setAttribute('aria-pressed', String(Number(b.dataset.trackerGoal) === trackerGoal)); });
+      const notice = el('trackerNotice');
+      notice.hidden = !trackerNotice;
+      notice.textContent = trackerNotice === 'blocked'
+        ? msg('无法安全读取已有数据，已暂停写入。请点「备份 JSON」下载原始数据以便修复，不要清理浏览器数据。', 'Existing data could not be read safely; writes are paused. Use “Back up JSON” to download raw data for recovery. Do not clear browser data.')
+        : msg('旧记录已保留为两张票方案；旧版数据仍保留在本机。未知中转机场标为 ?，请核对机场及逐段日期。原状态与段数保持不变。', 'Old records were retained as two-ticket plans; the original data remains in this browser. Unknown connection airports are shown as ?; review airports and individual dates. Original statuses and counts are unchanged.');
+      const filter = el('trackerFilter').value, sort = el('trackerSort').value;
+      const rows = trackerPlans.filter(p => filter === 'all' || planFlights(p).some(s => s.status === filter)).map(plan => ({ plan, calc: trackerCalc(plan) }));
+      const order = { candidate: 0, mixed: 1, booked: 2, flown: 3 };
+      const score = row => (sort === 'fare' ? row.calc.farePerSegment : sort === 'total' ? row.calc.total : row.calc.effectivePerSegment) ?? Infinity;
       rows.sort((a, b) => {
-        if (sort === 'newest') return (Date.parse(b.plan.updatedAt) || 0) - (Date.parse(a.plan.updatedAt) || 0);
-        if (sort === 'status') {
-          const diff = statusOrder[a.plan.status] - statusOrder[b.plan.status];
-          if (diff) return diff;
-        } else {
-          const diff = metric(a) - metric(b);
-          if (diff) return diff;
-        }
+        if (sort === 'status') return order[planStatus(a.plan)] - order[planStatus(b.plan)] || (Date.parse(b.plan.updatedAt) || 0) - (Date.parse(a.plan.updatedAt) || 0);
+        if (sort !== 'newest') { const diff = score(a) - score(b); if (diff && !Number.isNaN(diff)) return diff; }
         return (Date.parse(b.plan.updatedAt) || 0) - (Date.parse(a.plan.updatedAt) || 0);
       });
-
-      const finiteCosts = rows.map(item => item.calc.effectivePerSegment).filter(Number.isFinite);
-      const best = finiteCosts.length ? Math.min(...finiteCosts) : null;
       el('trackerRows').innerHTML = rows.map(({ plan, calc }) => {
-        const p1 = plan.price1 === null ? msg('待填', 'Pending') : formatMoney(plan.price1);
-        const p2 = plan.price2 === null ? msg('待填', 'Pending') : formatMoney(plan.price2);
-        const extra = calc.extras ? `<span class="tracker-sub">${msg('另计', 'Extras')} ${formatMoney(calc.extras)}</span>` : '';
-        const costClass = best !== null && calc.effectivePerSegment === best ? ' tracker-best' : '';
-        const cost = calc.total === null
-          ? `<span class="tracker-sub">${msg('补齐两张票价后计算', 'Calculated after both fares are entered')}</span>`
-          : `<span class="tracker-number${costClass}">${formatMoney(calc.effectivePerSegment)} ${msg('全成本 / 段', 'all-in / segment')}</span><span class="tracker-sub">${formatMoney(calc.farePerSegment)} ${msg('纯票价 / 段', 'airfare / segment')}</span>`;
-        const verifyCopy = plan.eligible
-          ? (plan.status === 'candidate' ? msg('资格已核对，购票后计入', 'Eligibility verified; counts after booking') : msg('✓ 已计入资格进度', '✓ Included in eligible progress'))
-          : (plan.status === 'candidate' ? msg('资格待核对', 'Eligibility not yet verified') : msg('未核对，不计入进度', 'Not verified; excluded from progress'));
-        const verifyClass = plan.eligible ? 'tracker-verified' : 'tracker-unverified';
-        const id = escapeHTML(plan.id);
-        const firstKey = `cash:${plan.origin}>${plan.stop}@${plan.date1}`;
-        const secondKey = `cash:${plan.stop}>${plan.destination}@${plan.date2}`;
-        return `<tr>
-          <td><span class="tracker-route">${plan.origin} → ${plan.stop} → ${plan.destination}</span><span class="tracker-sub">${plan.date1} · ${plan.date2}</span></td>
-          <td class="tracker-number">${p1} + ${p2}${calc.airfare === null ? '' : `<span class="tracker-sub">${msg('票价合计', 'Airfare total')} ${formatMoney(calc.airfare)}${calc.extras ? ` · ${msg('全成本', 'all-in')} ${formatMoney(calc.total)}` : ''}</span>`}${extra}</td>
-          <td class="tracker-number">${plan.segments1} + ${plan.segments2} = ${calc.segments}</td>
-          <td>${cost}</td>
-          <td><span class="tracker-status ${plan.status}">${statusText(plan.status)}</span><span class="${verifyClass}">${verifyCopy}</span></td>
-          <td class="tracker-note">${plan.note ? escapeHTML(plan.note) : '<span class="tracker-sub">—</span>'}</td>
-          <td><div class="tracker-actions">
-            <a class="pill" href="${escapeHTML(cashUrl(plan.origin, plan.stop, plan.date1))}" target="_blank" rel="noopener noreferrer" data-seen-key="${escapeHTML(firstKey)}">${msg('搜 1', 'Search 1')}</a>
-            <a class="pill" href="${escapeHTML(cashUrl(plan.stop, plan.destination, plan.date2))}" target="_blank" rel="noopener noreferrer" data-seen-key="${escapeHTML(secondKey)}">${msg('搜 2', 'Search 2')}</a>
-            <button class="pill link-ish" data-track-edit="${id}" type="button">${msg('编辑', 'Edit')}</button>
-            <button class="pill link-ish" data-track-delete="${id}" type="button">${msg('删除', 'Delete')}</button>
-          </div></td>
-        </tr>`;
+        const id = escapeHTML(plan.id), status = planStatus(plan);
+        return `<article class="group tracker-plan-card"><div class="group-header"><div><h3 class="group-title">${escapeHTML(planRoute(plan))}</h3><span class="tracker-sub">${plan.tickets.length} ${msg('张票', 'tickets')} · ${calc.segments} ${msg('实际段', 'actual segments')} · ${calc.eligible} ${msg('已核对合资格段', 'verified eligible segments')}</span></div>
+          <div class="pill-row"><span class="tracker-status ${status === 'mixed' ? 'candidate' : status}">${status === 'mixed' ? msg('混合状态', 'Mixed status') : statusText(status)}</span><button class="pill" data-track-edit="${id}" type="button">${msg('编辑', 'Edit')}</button><button class="pill link-ish" data-track-delete="${id}" type="button"${trackerStorageBlocked ? ' disabled' : ''}>${msg('删除', 'Delete')}</button></div></div>
+          <div class="tracker-plan-metrics"><span>${msg('票价合计', 'Airfare total')} ${formatMoney(calc.airfare)}${calc.missingPrices ? ` (${msg('待补', 'pending')}: ${calc.missingPrices})` : ''}</span><span>${msg('方案额外成本', 'Plan extras')} ${formatMoney(calc.extras)}</span><span>${msg('全成本', 'All-in')} ${formatMoney(calc.total)}</span></div>
+          <p class="section-note">${msg('票价 / 实际段', 'Airfare / actual segment')} ${formatMoney(calc.farePerSegment)} · ${msg('全成本 / 实际段', 'All-in / actual segment')} ${formatMoney(calc.effectivePerSegment)} · ${msg('全成本 / 已核对合资格段', 'All-in / verified eligible segment')} ${formatMoney(calc.qualifyingPerSegment)}</p>
+          ${plan.note ? `<p class="section-note" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:8px">${escapeHTML(plan.note)}</p>` : ''}
+          ${plan.tickets.map((ticket, ti) => {
+            const first = ticket.segments[0], last = ticket.segments.at(-1);
+            const search = first.origin !== last.destination ? `<a class="pill link-ish" href="${escapeHTML(cashUrl(first.origin, last.destination, first.date))}" data-seen-key="${escapeHTML(`cash:${first.origin}>${last.destination}@${first.date}`)}" target="_blank" rel="noopener noreferrer">${msg('搜索整张票', 'Search whole ticket')}</a>` : '';
+            return `<div class="saved-ticket"><div class="group-header"><span>${msg('机票', 'Ticket')} ${ti + 1} · ${escapeHTML(ticketRoute(ticket))} · <b>${ticket.price === null ? msg('票价待补', 'Fare pending') : formatMoney(ticket.price)}</b></span>${search}</div>
+            ${ticket.legacyUnresolved ? `<span class="tracker-unverified">${msg('旧记录：请补齐中转机场与逐段日期；未拆分票价。', 'Legacy record: review connection airports and individual dates; fare has not been split.')}</span>` : ''}
+            ${ticket.segments.map((s, si) => `<div class="saved-flight"><span>${si + 1}. ${escapeHTML(s.origin || '?')} → ${escapeHTML(s.destination || '?')}</span><span>${escapeHTML(s.date)}</span><span class="tracker-status ${s.status}">${statusText(s.status)}</span><span class="${s.eligible ? 'tracker-verified' : 'tracker-unverified'}">${s.eligible ? msg('资格已核对', 'Eligibility verified') : msg('资格未核对，不计进度', 'Unverified; excluded from progress')}</span></div>`).join('')}</div>`;
+          }).join('')}</article>`;
       }).join('');
-
-      const empty = el('trackerEmpty');
-      empty.hidden = rows.length !== 0;
-      empty.textContent = trackerPlans.length
-        ? msg('当前筛选条件下没有方案。', 'No plans match the current filter.')
-        : msg('还没有方案。可以从「两程凑 4 段」点“＋ 记录”，也可以直接在上面填写。', 'No plans yet. Use “+ Track” in Two tickets · 4 segments, or enter one above.');
       el('trackerListCount').textContent = msg(`显示 ${rows.length} / ${trackerPlans.length} 套方案`, `Showing ${rows.length} / ${trackerPlans.length} plans`);
+      el('trackerEmpty').hidden = Boolean(rows.length);
+      el('trackerEmpty').textContent = trackerPlans.length ? msg('当前筛选条件下没有方案。', 'No plans match the filter.') : msg('还没有记录。上方直接添加一张票即可，直飞不用填中转。', 'No records yet. Add one ticket above; no connection is required for a nonstop.');
       updateTrackerForm();
     }
-
+    function downloadTracker(text, filename, type) {
+      const url = URL.createObjectURL(new Blob([text], { type }));
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    function exportTrackerJSON() {
+      try {
+        if (trackerStorageBlocked) {
+          const raw = { recoveryOnly: true, v2: localStorage.getItem(TRACKER_KEY), v1: localStorage.getItem(TRACKER_LEGACY_KEY), previous: localStorage.getItem(TRACKER_BACKUP_KEY) };
+          downloadTracker(JSON.stringify(raw, null, 2), `atmos-raw-recovery-${todayISO()}.json`, 'application/json');
+        } else downloadTracker(JSON.stringify({ ...trackerPayload(), exportedAt: new Date().toISOString() }, null, 2), `atmos-tracker-backup-${todayISO()}.json`, 'application/json');
+        showToast(msg('备份已生成，请保管下载文件。', 'Backup generated; keep the downloaded file.'));
+      } catch (_) { showToast(msg('无法生成备份，请检查浏览器存储权限。', 'Could not create backup. Check browser storage permissions.')); }
+    }
     function csvCell(value) {
       let text = String(value ?? '');
       if (/^[=+\-@]/.test(text.trimStart())) text = `'${text}`;
       return `"${text.replace(/"/g, '""')}"`;
     }
-
     function exportTrackerCSV() {
-      if (!trackerPlans.length) { showToast(msg('还没有可导出的方案', 'There are no plans to export')); return; }
-      const header = language === 'en'
-        ? ['Route', 'Start', 'Break city', 'Final destination', 'Ticket 1 date', 'Ticket 1 fare USD', 'Ticket 1 segments', 'Ticket 2 date', 'Ticket 2 fare USD', 'Ticket 2 segments', 'Extra cost USD', 'Airfare total USD', 'All-in total USD', 'Total segments', 'Airfare per segment USD', 'All-in per segment USD', 'Status', 'Eligibility verified', 'Notes', 'Last updated']
-        : ['路线', '起点', '停留城市', '终点', '第一程日期', '第一张票价USD', '第一张航段', '第二程日期', '第二张票价USD', '第二张航段', '额外成本USD', '票价合计USD', '全成本USD', '总航段', '纯票价每段USD', '全成本每段USD', '状态', '资格已核对', '备注', '最后更新'];
-      const lines = [header, ...trackerPlans.map(plan => {
-        const calc = trackerCalc(plan);
-        return [
-          `${plan.origin}-${plan.stop}-${plan.destination}`, plan.origin, plan.stop, plan.destination,
-          plan.date1, plan.price1 ?? '', plan.segments1, plan.date2, plan.price2 ?? '', plan.segments2,
-          calc.extras, calc.airfare ?? '', calc.total ?? '', calc.segments,
-          calc.farePerSegment === null ? '' : calc.farePerSegment.toFixed(2),
-          calc.effectivePerSegment === null ? '' : calc.effectivePerSegment.toFixed(2),
-          statusText(plan.status), plan.eligible ? msg('是', 'Yes') : msg('否', 'No'), plan.note, plan.updatedAt
-        ];
-      })].map(row => row.map(csvCell).join(','));
-      const blob = new Blob([`\uFEFF${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `atmos-price-tracker-${todayISO()}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 0);
-      showToast(msg(`已导出 ${trackerPlans.length} 套方案`, `Exported ${trackerPlans.length} plans`));
+      if (!trackerPlans.length) return;
+      const headers = language === 'en'
+        ? ['Plan ID','Ticket ID','Ticket number','Flight number','Origin','Destination','Departure date','Ticket fare USD (first flight only)','Plan extras USD (first row only)','Status','Eligibility verified','Notes (first row only)','Last updated']
+        : ['方案ID','机票ID','机票序号','航段序号','出发','到达','出发日期','整张票价USD（仅首段）','方案额外成本USD（仅首行）','状态','资格已核对','备注（仅首行）','最后更新'];
+      const rows = [headers];
+      trackerPlans.forEach(p => p.tickets.forEach((t, ti) => t.segments.forEach((s, si) => rows.push([
+        p.id, t.id, ti + 1, si + 1, s.origin, s.destination, s.date, si === 0 ? t.price : '', ti === 0 && si === 0 ? p.extras : '',
+        statusText(s.status), s.eligible ? msg('是','Yes') : msg('否','No'), ti === 0 && si === 0 ? p.note : '', p.updatedAt
+      ]))));
+      downloadTracker('\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n'), `atmos-flight-segments-${todayISO()}.csv`, 'text/csv;charset=utf-8');
+      showToast(msg('CSV 已生成：每张票价和方案额外成本只出现一次，避免重复求和。', 'CSV generated: each ticket fare and plan-extra amount appears once to prevent double counting.'));
+    }
+    function parseCSV(text) {
+      const rows = []; let row = [], cell = '', quoted = false, closed = false;
+      text = text.replace(/^\uFEFF/, '');
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (quoted) {
+          if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+          else if (ch === '"') { quoted = false; closed = true; }
+          else cell += ch;
+        } else if (ch === ',' || ch === '\n' || ch === '\r') {
+          row.push(cell); cell = ''; closed = false;
+          if (ch !== ',') { if (row.some(x => x !== '')) rows.push(row); row = []; if (ch === '\r' && text[i + 1] === '\n') i++; }
+        } else if (ch === '"' && !cell && !closed) quoted = true;
+        else { if (closed || ch === '"') throw new Error('Invalid CSV quote'); cell += ch; }
+      }
+      if (quoted) throw new Error('Unclosed CSV quote');
+      if (cell || row.length) { row.push(cell); rows.push(row); }
+      return rows;
+    }
+    function parseLegacyCSV(text) {
+      const rows = parseCSV(text), h = rows.shift();
+      if (!h || h.length !== 20 || !['路线', 'Route'].includes(h[0]) || !['第一张票价USD', 'Ticket 1 fare USD'].includes(h[5])) throw new Error('Not a legacy CSV');
+      const statuses = { '候选':'candidate','已购':'booked','已飞':'flown',Candidate:'candidate',Booked:'booked',Flown:'flown' };
+      const plans = rows.map(row => {
+        if (row.length !== 20 || !Object.hasOwn(statuses, row[16]) || !['是','否','Yes','No'].includes(row[17])) throw new Error('Invalid legacy CSV row');
+        const amount = v => { if (v === '') return null; if (!Number.isFinite(Number(v)) || Number(v) < 0) throw new Error('Invalid CSV amount'); return Number(v); };
+        return { id: trackerId(), origin: row[1], stop: row[2], destination: row[3], date1: row[4], price1: amount(row[5]), segments1: Number(row[6]), date2: row[7], price2: amount(row[8]), segments2: Number(row[9]), extras: amount(row[10]) ?? 0, status: statuses[row[16]], eligible: ['是','Yes'].includes(row[17]), note: row[18].replace(/^'(?=[=+\-@])/, ''), updatedAt: row[19] };
+      });
+      return parseTrackerPayload({ version: 1, plans });
+    }
+    function planFingerprint(plan) {
+      return JSON.stringify({ extras: plan.extras, note: plan.note, tickets: plan.tickets.map(t => ({ price: t.price, segments: t.segments.map(({ origin, destination, date, status, eligible }) => ({ origin, destination, date, status, eligible })) })) });
+    }
+    async function importTrackerFile(file) {
+      if (!file || trackerStorageBlocked) return;
+      try {
+        if (file.size > 5 * 1024 * 1024) throw new Error('Too large');
+        const text = (await file.text()).replace(/^\uFEFF/, '');
+        const data = file.name.toLowerCase().endsWith('.csv') ? parseLegacyCSV(text) : parseTrackerPayload(JSON.parse(text));
+        const knownIds = new Map(trackerPlans.map(p => [p.id, planFingerprint(p)]));
+        const fingerprints = new Set(trackerPlans.map(planFingerprint));
+        let duplicates = 0, conflicts = 0; const incoming = [];
+        data.plans.forEach(p => {
+          const fingerprint = planFingerprint(p);
+          if (fingerprints.has(fingerprint)) { duplicates++; return; }
+          if (knownIds.has(p.id)) { conflicts++; return; }
+          incoming.push(p); fingerprints.add(fingerprint); knownIds.set(p.id, fingerprint);
+        });
+        const useGoal = trackerPlans.length ? trackerGoal : data.goal;
+        if (trackerPlans.length + incoming.length > 2000) throw new Error('Too many plans');
+        const message = msg(
+          `导入 ${incoming.length} 套方案；跳过 ${duplicates} 套重复、${conflicts} 套同 ID 冲突（保留本机版本）。不会覆盖现有记录。目标为 ${useGoal} 段。继续吗？`,
+          `Import ${incoming.length} plans; skip ${duplicates} duplicates and ${conflicts} conflicting IDs (keep local versions). Existing records will not be overwritten. Goal: ${useGoal} segments. Continue?`);
+        if (!window.confirm(message)) return;
+        if (!persistTracker([...trackerPlans, ...incoming], useGoal)) return;
+        renderTracker(); refreshSeen();
+        showToast(msg(`已导入 ${incoming.length} 套，跳过 ${duplicates + conflicts} 套。`, `Imported ${incoming.length}; skipped ${duplicates + conflicts}.`));
+      } catch (_) { showToast(msg('导入失败，未更改记录。请使用有效的 JSON 备份或旧版两张票 CSV（不超过 5 MB）。', 'Import failed; records are unchanged. Use a valid JSON backup or legacy two-ticket CSV (up to 5 MB).')); }
+    }
+    function undoTrackerChange() {
+      if (trackerStorageBlocked || !canDiscardTrackerDraft()) return;
+      try {
+        const raw = localStorage.getItem(TRACKER_BACKUP_KEY);
+        if (!raw) return;
+        const data = parseTrackerPayload(JSON.parse(raw));
+        if (!window.confirm(msg(`恢复上次修改前的 ${data.plans.length} 套记录及 ${data.goal} 段目标？当前版本会保留为下一次可恢复版本。`, `Restore ${data.plans.length} plans and goal ${data.goal} from the previous revision? The current version will become the next restorable revision.`))) return;
+        if (!persistTracker(data.plans, data.goal)) return;
+        resetTrackerForm(); renderTracker(); refreshSeen();
+        showToast(msg('已恢复上一版本。', 'Previous revision restored.'));
+      } catch (_) { showToast(msg('无法恢复备份，现有记录未更改。', 'Could not restore the backup; current records are unchanged.')); }
     }
 
     function renderMatrix() {
@@ -2230,29 +2236,121 @@
     wireCode('destination', () => { updateCustom(); refreshSeen(); save(); }, 'customGo');
     wireCode('legOrigin', () => { renderStopBoards(); refreshSeen(); save(); });
     wireCode('legDest', () => { renderStopBoards(); refreshSeen(); save(); });
-    wireCode('trackOrigin', updateTrackerForm);
-    wireCode('trackStop', updateTrackerForm);
-    wireCode('trackDest', updateTrackerForm);
     wireCode('awOrigin', () => { updateAwardCustom(); refreshSeen(); save(); }, 'awGo');
     wireCode('awDest', () => { updateAwardCustom(); refreshSeen(); save(); }, 'awGo');
 
-    ['trackDate1', 'trackDate2', 'trackPrice1', 'trackPrice2', 'trackSegments1', 'trackSegments2', 'trackExtras', 'trackStatus', 'trackEligible', 'trackNote']
-      .forEach(id => {
-        el(id).addEventListener('input', updateTrackerForm);
-        el(id).addEventListener('change', updateTrackerForm);
-      });
-    el('trackerForm').addEventListener('submit', e => {
-      e.preventDefault();
-      // 在机场 datalist 里按 Enter 只确认机场，不应顺手把尚未填写完的方案保存。
-      if (document.activeElement && document.activeElement.matches('#trackerForm input.code')) {
-        updateTrackerForm();
-        return;
+    function onTrackerInput(e) {
+      const input = e.target;
+      if (!input.closest('#trackerForm') || !trackerDraftPlan) return;
+      if (input.hasAttribute('data-ticket-price')) {
+        trackerDraftPlan.tickets[Number(input.dataset.ticketPrice)].price = input.value === '' ? null : Number(input.value);
+      } else if (input.hasAttribute('data-flight-field')) {
+        const ti = Number(input.dataset.ticket), si = Number(input.dataset.flight), field = input.dataset.flightField;
+        const ticket = trackerDraftPlan.tickets[ti], segment = ticket.segments[si];
+        const previousValue = segment[field];
+        segment[field] = field === 'eligible' ? input.checked : input.value;
+        if (field === 'origin' || field === 'destination') {
+          const position = input.selectionStart;
+          segment[field] = normalizeCode(input.value);
+          if (input.value !== segment[field]) { input.value = segment[field]; input.setSelectionRange(position, position); }
+          if (previousValue !== segment[field]) { segment.eligible = false; el(`flight-${ti}-${si}-eligible`).checked = false; }
+          // A connection is one airport shared by the two adjacent flight rows.
+          const other = field === 'origin' ? si - 1 : si + 1;
+          const otherField = field === 'origin' ? 'destination' : 'origin';
+          if (ticket.segments[other]) {
+            if (ticket.segments[other][otherField] !== segment[field]) { ticket.segments[other].eligible = false; el(`flight-${ti}-${other}-eligible`).checked = false; }
+            ticket.segments[other][otherField] = segment[field];
+            el(`flight-${ti}-${other}-${otherField}`).value = segment[field];
+          }
+        }
+      } else if (input.id === 'trackExtras') trackerDraftPlan.extras = input.value === '' ? 0 : Number(input.value);
+      else if (input.id === 'trackNote') trackerDraftPlan.note = input.value;
+      else return;
+      trackerDirty = true;
+      updateTrackerForm();
+      refreshSeen();
+    }
+    document.addEventListener('input', onTrackerInput);
+    document.addEventListener('change', e => {
+      onTrackerInput(e);
+      if (e.target.id === 'trackerFilter' || e.target.id === 'trackerSort') { renderTracker(); refreshSeen(); save(); }
+      if (e.target.id === 'trackerGoal') {
+        const value = Number(e.target.value);
+        if (!Number.isInteger(value) || value < 1 || value > 1000) { showToast(msg('目标须为 1–1000 的整数。', 'Goal must be an integer from 1 to 1000.')); e.target.value = trackerGoal; return; }
+        if (persistTracker(trackerPlans, value)) renderTracker();
+        else e.target.value = trackerGoal;
       }
+      if (e.target.id === 'trackerImportFile') { importTrackerFile(e.target.files[0]); e.target.value = ''; }
+    });
+    document.addEventListener('submit', e => {
+      if (e.target.id !== 'trackerForm') return;
+      e.preventDefault();
+      if (document.activeElement?.matches('#trackerForm input.code')) { updateTrackerForm(); return; }
       saveTrackerFromForm();
     });
-    el('trackerCancel').addEventListener('click', () => { resetTrackerForm(); showToast(msg('已取消编辑', 'Editing canceled')); });
-    el('trackerExport').addEventListener('click', exportTrackerCSV);
-    ['trackerFilter', 'trackerSort'].forEach(id => el(id).addEventListener('change', () => { renderTracker(); refreshSeen(); save(); }));
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.matches('#trackerForm input.code')) e.preventDefault();
+    });
+    document.addEventListener('keyup', e => {
+      if (e.key === 'Enter' && e.target.matches('#trackerForm input.code')) onTrackerInput(e);
+    });
+    window.addEventListener('beforeunload', e => { if (trackerDirty) { e.preventDefault(); e.returnValue = ''; } });
+    document.addEventListener('click', e => {
+      const button = e.target.closest('button');
+      if (!button || !button.closest('#panel-tracker')) return;
+      const ds = button.dataset;
+      if (button.id === 'trackerBackup') { exportTrackerJSON(); return; }
+      if (button.id === 'trackerExport') { exportTrackerCSV(); return; }
+      if (button.id === 'trackerImport') { el('trackerImportFile').click(); return; }
+      if (button.id === 'trackerUndo') { undoTrackerChange(); return; }
+      if (ds.trackerGoal) { if (persistTracker(trackerPlans, Number(ds.trackerGoal))) renderTracker(); return; }
+      if (button.id === 'trackerCancel') { if (canDiscardTrackerDraft()) resetTrackerForm(); return; }
+      if (ds.trackEdit) {
+        if (!canDiscardTrackerDraft()) return;
+        const plan = trackerPlans.find(p => p.id === ds.trackEdit);
+        if (plan) { populateTrackerForm(plan); el('trackerForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        return;
+      }
+      if (ds.trackDelete) {
+        const plan = trackerPlans.find(p => p.id === ds.trackDelete);
+        if (!plan || trackerStorageBlocked) return;
+        if (trackerEditingId === plan.id && !canDiscardTrackerDraft()) return;
+        if (!window.confirm(msg(`删除方案 ${planRoute(plan)}？可用「恢复上次修改前」撤销最近一次修改。`, `Delete ${planRoute(plan)}? “Restore previous revision” can undo the latest change.`))) return;
+        if (!persistTracker(trackerPlans.filter(p => p.id !== plan.id))) return;
+        if (trackerEditingId === plan.id) resetTrackerForm();
+        renderTracker(); refreshSeen(); showToast(msg('方案已删除，可恢复上次修改前。', 'Plan deleted; the previous revision can be restored.')); return;
+      }
+      if (button.id === 'trackerAddTicket') {
+        if (trackerDraftPlan.tickets.length >= 20) { showToast(msg('每个方案最多 20 张票。', 'Up to 20 tickets per plan.')); return; }
+        const previous = trackerDraftPlan.tickets.at(-1).segments.at(-1);
+        trackerDraftPlan.tickets.push(newTicket(previous.destination, '', previous.date));
+      } else if (ds.ticketRemove !== undefined) {
+        if (trackerDraftPlan.tickets.length < 2 || !window.confirm(msg('移除这张票及其航段？保存后才会更新记录。', 'Remove this ticket and its flights? Records change only when saved.'))) return;
+        trackerDraftPlan.tickets.splice(Number(ds.ticketRemove), 1);
+      } else if (ds.flightAdd !== undefined) {
+        const ticket = trackerDraftPlan.tickets[Number(ds.flightAdd)];
+        if (ticket.segments.length >= 16) { showToast(msg('每张票最多记录 16 个航段。', 'Up to 16 flights per ticket.')); return; }
+        const last = ticket.segments.at(-1), destination = last.destination;
+        last.destination = '';
+        last.eligible = false;
+        ticket.segments.push(newFlight('', destination, last.date));
+        // New flights always need an explicit eligibility check.
+      } else if (ds.flightRemove !== undefined) {
+        const [ti, si] = ds.flightRemove.split(',').map(Number), ticket = trackerDraftPlan.tickets[ti];
+        if (ticket.segments.length < 2 || !window.confirm(msg('移除这一航段并连接剩余路线？整张票价不变，请重新核对修改后的航段资格。', 'Remove this flight and reconnect the route? The whole-ticket fare stays unchanged; recheck eligibility of the changed flight.'))) return;
+        const removed = ticket.segments[si];
+        if (si > 0) { ticket.segments[si - 1].destination = removed.destination; ticket.segments[si - 1].eligible = false; }
+        else { ticket.segments[1].origin = removed.origin; ticket.segments[1].eligible = false; }
+        ticket.segments.splice(si, 1);
+      } else return;
+      trackerDirty = true;
+      renderTicketEditors();
+      if (ds.flightAdd !== undefined) {
+        const ti = Number(ds.flightAdd), si = trackerDraftPlan.tickets[ti].segments.length - 2;
+        el(`flight-${ti}-${si}-destination`).focus();
+      }
+      refreshSeen();
+    });
 
     document.addEventListener('click', e => {
       const go = e.target.closest('#customGo[href], #awGo[href]');
@@ -2329,38 +2427,12 @@
 
       const trackStop = e.target.closest('[data-track-stop]');
       if (trackStop) {
-        if (trackerEditingId && !window.confirm(msg('当前正在编辑一条方案。要放弃未保存的修改并带入新路线吗？', 'You are editing a plan. Discard unsaved changes and load the new route?'))) return;
-        const origin = codeOf('legOrigin');
-        const destination = codeOf('legDest');
-        prefillTracker(origin, trackStop.dataset.trackStop, destination);
+        if (!canDiscardTrackerDraft()) return;
+        prefillTracker(codeOf('legOrigin'), trackStop.dataset.trackStop, codeOf('legDest'));
         activateCashTab(el('tab-tracker'));
         el('trackerForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(() => el('trackPrice1').focus(), 220);
-        showToast(msg(`已带入 ${origin} → ${trackStop.dataset.trackStop} → ${destination}`, `Loaded ${origin} → ${trackStop.dataset.trackStop} → ${destination}`));
-        return;
-      }
-
-      const trackEdit = e.target.closest('[data-track-edit]');
-      if (trackEdit) {
-        const plan = trackerPlans.find(item => item.id === trackEdit.dataset.trackEdit);
-        if (!plan) return;
-        populateTrackerForm(plan);
-        activateCashTab(el('tab-tracker'));
-        el('trackerForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(() => el('trackPrice1').focus(), 220);
-        return;
-      }
-
-      const trackDelete = e.target.closest('[data-track-delete]');
-      if (trackDelete) {
-        const plan = trackerPlans.find(item => item.id === trackDelete.dataset.trackDelete);
-        if (!plan || !window.confirm(msg(`删除 ${plan.origin} → ${plan.stop} → ${plan.destination} 这套方案？`, `Delete the ${plan.origin} → ${plan.stop} → ${plan.destination} plan?`))) return;
-        trackerPlans = trackerPlans.filter(item => item.id !== plan.id);
-        if (trackerEditingId === plan.id) resetTrackerForm();
-        saveTrackerPlans();
-        renderTracker();
-        refreshSeen();
-        showToast(msg('方案已删除', 'Plan deleted'));
+        el('ticket-price-0').focus();
+        showToast(msg('已带入两张票的候选方案，请补齐实际中转机场。', 'Loaded a two-ticket candidate plan. Fill in the actual connection airports.'));
         return;
       }
 
@@ -2407,6 +2479,7 @@
       normalizeDates('init');
 
       trackerPlans = loadTrackerPlans();
+      renderTrackerShell();
       el('trackerFilter').value = ['all', 'candidate', 'booked', 'flown'].includes(saved.trackerFilter) ? saved.trackerFilter : 'all';
       el('trackerSort').value = ['effective', 'fare', 'total', 'newest', 'status'].includes(saved.trackerSort) ? saved.trackerSort : 'effective';
       resetTrackerForm();
