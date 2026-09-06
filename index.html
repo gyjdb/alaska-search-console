@@ -753,7 +753,7 @@
     <datalist id="airportList"></datalist>
 
     <p class="footer">
-      按住 <kbd>⌘</kbd> / <kbd>Ctrl</kbd> 点击可在后台开新标签页。搜索结果是最终依据；参数、主题、已看标记与价格记录都保存在本机浏览器，重要记录可随时导出 CSV。
+      按住 <kbd>⌘</kbd> / <kbd>Ctrl</kbd> 点击可在后台开新标签页。搜索结果是最终依据；参数、主题、已看标记与价格记录都保存在本机浏览器。重要记录请备份 JSON，CSV 用于分析。
     </p>
   </div>
 
@@ -838,7 +838,7 @@
       '亚洲门户与中国大陆': 'Asian gateways and Mainland China', '卡片右上角的标签是执飞这条线的 Atmos 伙伴。某个日期是直飞还是中转、要多少里程，都以日历里显示的为准。': 'The badge identifies the Atmos partner serving that route. The calendar is the source of truth for nonstop vs. connecting service and mileage price.',
       '美国 ↔ 欧洲门户': 'US ↔ European gateways', '按距离定价，含一次免费中停。东岸出发落在最便宜的价格带，西岸要贵一档。': 'Distance-based pricing includes one free stopover. East Coast departures fall in the lowest band; the West Coast is one band higher.',
       '搜之前先知道这些': 'Know these before searching',
-      '按住': 'Hold', '点击可在后台开新标签页。搜索结果是最终依据；参数、主题、已看标记与价格记录都保存在本机浏览器，重要记录可随时导出 CSV。': 'while clicking to open a background tab. Search results are final; preferences, theme, opened markers, and price records stay in this browser. Export important records to CSV.'
+      '按住': 'Hold', '点击可在后台开新标签页。搜索结果是最终依据；参数、主题、已看标记与价格记录都保存在本机浏览器。重要记录请备份 JSON，CSV 用于分析。': 'while clicking to open a background tab. Search results are final; preferences, theme, opened markers, and price records stay in this browser. Back up important records as JSON; use CSV for analysis.'
     };
 
     const PLACEHOLDER_COPY = {};
@@ -1629,7 +1629,7 @@
       const plan = trackerDraftPlan;
       const field = (id, label, attrs) => `<div class="form-field"><label for="${id}">${label}</label><input id="${id}" ${attrs}></div>`;
       el('trackerTickets').innerHTML = plan.tickets.map((ticket, ti) => `
-        <div class="ticket-editor" data-ticket-index="${ti}"><div class="group-header"><span class="group-title">${msg('机票', 'Ticket')} ${ti + 1} · ${ticket.segments.length} ${msg('个实际航段', 'actual segments')}</span>
+        <div class="ticket-editor" data-ticket-index="${ti}"><div class="group-header"><span class="group-title">${msg('机票', 'Ticket')} ${ti + 1} · ${ticket.segments.length} ${msg('个实际航段', ticket.segments.length === 1 ? 'actual segment' : 'actual segments')}</span>
           ${plan.tickets.length > 1 ? `<button class="pill link-ish" type="button" data-ticket-remove="${ti}">${msg('移除这张票', 'Remove ticket')}</button>` : ''}</div>
           <div class="ticket-price-field">${field(`ticket-price-${ti}`, msg('整张票含税总价（USD）', 'Whole-ticket total (USD, incl. tax)'), `data-ticket-price="${ti}" type="number" min="0" max="10000000" step="0.01" inputmode="decimal" value="${ticket.price ?? ''}" placeholder="${msg('待补，可留空', 'Pending; optional')}"`)}</div>
           ${ticket.legacyUnresolved ? `<p class="section-note" style="color:var(--text-warn)">${msg('旧记录只保存了段数，未保存中转机场；空白机场待核对，原价格和段数均保留。', 'The old record saved segment counts but not connection airports. Blank airports need review; original fares and counts are preserved.')}</p>` : ''}
@@ -1688,9 +1688,9 @@
       const issue = trackerFormIssue(plan), calc = trackerCalc(plan);
       el('trackerPreview').classList.toggle('warn', Boolean(issue));
       el('trackerPreview').textContent = issue ? issue.message :
-        msg(`${plan.tickets.length} 张票 · ${calc.segments} 个实际航段 · `, `${plan.tickets.length} tickets · ${calc.segments} actual segments · `) +
+        msg(`${plan.tickets.length} 张票 · ${calc.segments} 个实际航段 · `, `${plan.tickets.length} ticket${plan.tickets.length === 1 ? '' : 's'} · ${calc.segments} actual segment${calc.segments === 1 ? '' : 's'} · `) +
         (calc.total === null
-          ? msg(`已填票价 ${formatMoney(calc.knownFare)}，另有 ${calc.missingPrices} 张待补；暂不计算每段成本。`, `Entered airfare ${formatMoney(calc.knownFare)}; ${calc.missingPrices} fares pending. Per-segment cost is not calculated yet.`)
+          ? msg(`已填票价 ${formatMoney(calc.knownFare)}，另有 ${calc.missingPrices} 张待补；暂不计算每段成本。`, `Entered airfare ${formatMoney(calc.knownFare)}; ${calc.missingPrices} fare${calc.missingPrices === 1 ? '' : 's'} pending. Per-segment cost is not calculated yet.`)
           : msg(`票价 ${formatMoney(calc.airfare)} · 全成本 ${formatMoney(calc.total)} · ${formatMoney(calc.effectivePerSegment)} / 实际段`, `Airfare ${formatMoney(calc.airfare)} · all-in ${formatMoney(calc.total)} · ${formatMoney(calc.effectivePerSegment)} / actual segment`));
     }
     function resetTrackerForm() {
@@ -1780,7 +1780,7 @@
       });
       el('trackerRows').innerHTML = rows.map(({ plan, calc }) => {
         const id = escapeHTML(plan.id), status = planStatus(plan);
-        return `<article class="group tracker-plan-card"><div class="group-header"><div><h3 class="group-title">${escapeHTML(planRoute(plan))}</h3><span class="tracker-sub">${plan.tickets.length} ${msg('张票', 'tickets')} · ${calc.segments} ${msg('实际段', 'actual segments')} · ${calc.eligible} ${msg('已核对合资格段', 'verified eligible segments')}</span></div>
+        return `<article class="group tracker-plan-card"><div class="group-header"><div><h3 class="group-title">${escapeHTML(planRoute(plan))}</h3><span class="tracker-sub">${plan.tickets.length} ${msg('张票', plan.tickets.length === 1 ? 'ticket' : 'tickets')} · ${calc.segments} ${msg('实际段', calc.segments === 1 ? 'actual segment' : 'actual segments')} · ${calc.eligible} ${msg('已核对合资格段', calc.eligible === 1 ? 'verified eligible segment' : 'verified eligible segments')}</span></div>
           <div class="pill-row"><span class="tracker-status ${status === 'mixed' ? 'candidate' : status}">${status === 'mixed' ? msg('混合状态', 'Mixed status') : statusText(status)}</span><button class="pill" data-track-edit="${id}" type="button">${msg('编辑', 'Edit')}</button><button class="pill link-ish" data-track-delete="${id}" type="button"${trackerStorageBlocked ? ' disabled' : ''}>${msg('删除', 'Delete')}</button></div></div>
           <div class="tracker-plan-metrics"><span>${msg('票价合计', 'Airfare total')} ${formatMoney(calc.airfare)}${calc.missingPrices ? ` (${msg('待补', 'pending')}: ${calc.missingPrices})` : ''}</span><span>${msg('方案额外成本', 'Plan extras')} ${formatMoney(calc.extras)}</span><span>${msg('全成本', 'All-in')} ${formatMoney(calc.total)}</span></div>
           <p class="section-note">${msg('票价 / 实际段', 'Airfare / actual segment')} ${formatMoney(calc.farePerSegment)} · ${msg('全成本 / 实际段', 'All-in / actual segment')} ${formatMoney(calc.effectivePerSegment)} · ${msg('全成本 / 已核对合资格段', 'All-in / verified eligible segment')} ${formatMoney(calc.qualifyingPerSegment)}</p>
