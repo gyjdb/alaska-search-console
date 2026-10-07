@@ -116,4 +116,4 @@ Preferences, opened-route markers, and price-tracker records stay only in the br
 
 This tool only constructs Alaska search URLs. Alaska's live results and the current promotion terms remain the final source of truth for fares, routing, operating carriers, cabins, and segment eligibility.
 
-The legacy `alaska_award_launcher.html` entry is kept in sync with `index.html` so older direct links continue to work.
+The legacy `alaska_award_launcher.html` entry redirects to `index.html` so older direct links continue to work.
